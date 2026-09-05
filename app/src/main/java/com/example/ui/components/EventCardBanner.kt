@@ -1,17 +1,9 @@
 package com.example.ui.components
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -19,9 +11,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.model.SocialEvent
 import com.example.ui.theme.*
 
@@ -33,7 +23,6 @@ fun EventCardBanner(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(148.dp)
             .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
     ) {
         // High-craft Graphic Illustration of real-world venue / stage / conference
@@ -177,74 +166,6 @@ fun EventCardBanner(
                         drawCircle(color = ColorMustard, radius = 5f, center = Offset(x, y))
                     }
                 }
-            }
-        }
-
-        // Overlay Badge Top-Left: Category Chip (e.g. "Tecnologia", "Meetup")
-        Surface(
-            modifier = Modifier
-                .padding(12.dp)
-                .align(Alignment.TopStart),
-            shape = RoundedCornerShape(9999.dp),
-            color = ColorTealLight.copy(alpha = 0.95f),
-            border = androidx.compose.foundation.BorderStroke(1.dp, ColorTealBorder)
-        ) {
-            Text(
-                text = event.category.label,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
-                color = ColorTeal,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        // Overlay Badge Top-Right: Community Rating Chip ("★ 4.9")
-        Surface(
-            modifier = Modifier
-                .padding(12.dp)
-                .align(Alignment.TopEnd),
-            shape = RoundedCornerShape(9999.dp),
-            color = Color.White.copy(alpha = 0.95f),
-            border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm)
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                ObsidianPrismRatingIcon(
-                    isFilled = true,
-                    size = 14.dp,
-                    tint = ColorMustard
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "${event.ratingAvg}",
-                    style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
-                    color = ColorDarkObsidian,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-
-        // Overlay Badge Bottom-Left: Date & Time Pill ("📅 Hoje às 08:30")
-        Surface(
-            modifier = Modifier
-                .padding(12.dp)
-                .align(Alignment.BottomStart),
-            shape = RoundedCornerShape(9999.dp),
-            color = Color(0xCC0B0C10),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF))
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "📅 ${event.dateDisplay} às ${event.timeDisplay}",
-                    style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
             }
         }
     }
