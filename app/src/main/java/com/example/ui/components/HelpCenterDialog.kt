@@ -51,7 +51,7 @@ fun HelpCenterDialog(
                 icon = Icons.Default.NearMe,
                 title = "Radar de Encontros",
                 subtitle = "Sonar de proximidade em tempo real",
-                description = "O radar mapeia pessoas e rolês ao seu redor em um raio ajustável de 1km a 5km. Quando você entra no raio de 500m de um evento ativo, o botão de check-in é ativado instantaneamente."
+                description = "O radar mapeia pessoas e encontros ao seu redor em um raio ajustável de 1km a 5km. Quando você entra no raio de 500m de um evento ativo, o botão de check-in é ativado instantaneamente."
             ),
             HelpTopic(
                 id = "checkin",

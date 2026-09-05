@@ -48,11 +48,12 @@ import kotlinx.coroutines.launch
 @Composable
 fun EventMediaReelBanner(
     event: SocialEvent,
-    isOwner: Boolean,
-    onAddMedia: (List<String>) -> Unit,
-    onManageMedia: () -> Unit,
+    isOwner: Boolean = false,
+    onAddMedia: (List<String>) -> Unit = {},
+    onManageMedia: () -> Unit = {},
     modifier: Modifier = Modifier,
-    height: Dp = 175.dp
+    height: Dp = 175.dp,
+    overlayContent: @Composable BoxScope.() -> Unit = {}
 ) {
     val coroutineScope = rememberCoroutineScope()
     val mediaList = event.mediaReel
@@ -197,110 +198,8 @@ fun EventMediaReelBanner(
             EventCardBanner(event = event, modifier = Modifier.fillMaxSize())
         }
 
-        // BADGE DO TOPO ESQUERDO: CATEGORIA
-        Surface(
-            modifier = Modifier
-                .padding(12.dp)
-                .align(Alignment.TopStart),
-            shape = RoundedCornerShape(9999.dp),
-            color = ColorTealLight.copy(alpha = 0.95f),
-            border = androidx.compose.foundation.BorderStroke(1.dp, ColorTealBorder)
-        ) {
-            Text(
-                text = event.category.label,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                style = MaterialTheme.typography.labelSmall,
-                color = ColorTeal,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        // BADGES DO TOPO DIREITO: AVALIAÇÃO E BOTÃO DO ANFITRIÃO
-        Row(
-            modifier = Modifier
-                .padding(12.dp)
-                .align(Alignment.TopEnd),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Se for o dono do encontro: BOTÃO EXCLUSIVO DE SUBIR / GERENCIAR MÍDIA DO CARRETEL
-            if (isOwner) {
-                Surface(
-                    onClick = onManageMedia,
-                    shape = RoundedCornerShape(9999.dp),
-                    color = ColorBurntOrange,
-                    shadowElevation = 3.dp,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, ColorBurntOrangeLight),
-                    modifier = Modifier.testTag("host_upload_media_btn_${event.id}")
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(5.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AddPhotoAlternate,
-                            contentDescription = "Subir Mídia",
-                            tint = Color.White,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Text(
-                            text = if (mediaList.isEmpty()) "Subir Carretel" else "Carretel (${mediaList.size})",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Black,
-                            color = Color.White
-                        )
-                    }
-                }
-            }
-
-            // Nota Prismática
-            Surface(
-                shape = RoundedCornerShape(9999.dp),
-                color = Color.White.copy(alpha = 0.95f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    ObsidianPrismRatingIcon(
-                        isFilled = true,
-                        size = 14.dp,
-                        tint = ColorMustard
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "${event.ratingAvg}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = ColorDarkObsidian,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-
-        // BADGE DO RODAPÉ ESQUERDO: DATA & HORA
-        Surface(
-            modifier = Modifier
-                .padding(12.dp)
-                .align(Alignment.BottomStart),
-            shape = RoundedCornerShape(9999.dp),
-            color = Color(0xCC0B0C10),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF))
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "📅 ${event.dateDisplay} às ${event.timeDisplay}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
+        // Overlays customizados e não-conflitantes configurados pelo chamador
+        overlayContent()
     }
 }
 

@@ -236,7 +236,7 @@ fun EventFeedbackDialog(
                             ) {
                                 ObsidianLogoEmblem(size = 20.dp)
                                 Text(
-                                    text = "Como foi a vibe do rolê?",
+                                    text = "Como foi a vibe do encontro?",
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Black,
                                     color = ColorDarkObsidian,
@@ -441,18 +441,18 @@ fun EventFeedbackDialog(
                                         fontWeight = FontWeight.Black,
                                         color = ObsidianTealDark
                                     )
-                                    Text(
-                                        text = "Sua avaliação ajuda os amigos da tribo a escolher os melhores rolês!",
-                                        fontSize = 10.5.sp,
-                                        color = TextSecondary,
-                                        lineHeight = 14.sp
-                                    )
+                                     Text(
+                                         text = "Sua avaliação ajuda os amigos da tribo a escolher os melhores encontros!",
+                                         fontSize = 10.5.sp,
+                                         color = TextSecondary,
+                                         lineHeight = 14.sp
+                                     )
                                 }
                             }
                         }
 
                         // ====================================================================
-                        // 5. BOTÕES DE AÇÃO: AVALIAR ROLÊ OU ADIAR
+                        // 5. BOTÕES DE AÇÃO: AVALIAR ENCONTRO OU ADIAR
                         // ====================================================================
                         Column(
                             modifier = Modifier.fillMaxWidth(),
@@ -482,11 +482,11 @@ fun EventFeedbackDialog(
                                         size = 18.dp,
                                         tint = Color(0xFFFFF0B3)
                                     )
-                                    Text(
-                                        text = "Avaliar Rolê (+1 OQ)",
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Black
-                                    )
+                                     Text(
+                                         text = "Avaliar Encontro (+1 OQ)",
+                                         fontSize = 14.sp,
+                                         fontWeight = FontWeight.Black
+                                     )
                                 }
                             }
 

@@ -286,7 +286,7 @@ fun ParticipantSonarRadar(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(modifier = Modifier.size(8.dp).background(ColorTeal, CircleShape))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Rolês Confirmados", fontSize = 11.sp, color = TextMuted)
+                    Text("Encontros Confirmados", fontSize = 11.sp, color = TextMuted)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(modifier = Modifier.size(8.dp).background(Color.White, CircleShape))

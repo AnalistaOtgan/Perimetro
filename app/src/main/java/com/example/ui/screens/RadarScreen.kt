@@ -233,7 +233,7 @@ fun RadarScreen(
                     }
                 }
 
-                // 3. Galera nos Rolês & Vibe da Comunidade da Tribo
+                // 3. Galera nos Encontros & Vibe da Comunidade da Tribo
                 item {
                     TribeSocialPresenceBar(
                         onFriendClick = { friend ->
@@ -285,7 +285,7 @@ fun RadarScreen(
                                 }
                                 Column {
                                     Text(
-                                        text = "Explorar Rolês & Fotos",
+                                        text = "Explorar Encontros & Fotos",
                                         fontSize = 15.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = ColorDarkObsidian
@@ -362,7 +362,7 @@ fun RadarScreen(
 }
 
 /**
- * Card Chamativo: Participante chegou ao Rolê!
+ * Card Chamativo: Participante chegou ao Encontro!
  */
 @Composable
 fun ParticipantInGeofenceCard(
@@ -405,7 +405,7 @@ fun ParticipantInGeofenceCard(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "🎉 VOCÊ CHEGOU AO ROLÊ!",
+                            text = "🎉 VOCÊ CHEGOU AO ENCONTRO!",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Black,
                             color = ColorBurntOrangeLight,
@@ -545,7 +545,7 @@ data class TribeFriendStory(
 )
 
 /**
- * Seção Social da Tribo: Amigos nos Rolês & Vibe da Comunidade
+ * Seção Social da Tribo: Amigos nos Encontros & Vibe da Comunidade
  * Substitui o formato de dashboard corporativo por um feed dinâmico de rede social
  */
 @Composable
@@ -574,7 +574,7 @@ fun TribeSocialPresenceBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Sua Galera nos Rolês",
+                text = "Sua Galera nos Encontros",
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Bold,
                 color = ColorDarkObsidian
@@ -842,117 +842,120 @@ fun ParticipantEventCard(
                     onAddMedia = onAddMedia,
                     onManageMedia = onManageMedia,
                     height = 220.dp
-                )
-
-                // Overlays na Foto: Categoria e Proximidade no Topo Esquerdo
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
+                    // Overlays na Foto: Categoria e Proximidade no Topo Esquerdo
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(9999.dp),
+                            color = Color.Black.copy(alpha = 0.65f),
+                            border = androidx.compose.foundation.BorderStroke(0.8.dp, Color.White.copy(alpha = 0.3f))
+                        ) {
+                            Text(
+                                text = event.category.label,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
+                        }
+
+                        if (isInsideGeofence) {
+                            Surface(
+                                shape = RoundedCornerShape(9999.dp),
+                                color = ColorBurntOrange,
+                                border = androidx.compose.foundation.BorderStroke(0.8.dp, Color.White.copy(alpha = 0.4f))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Box(modifier = Modifier.size(6.dp).background(Color.White, CircleShape))
+                                    Text(
+                                        text = "No Local",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
+                                }
+                            }
+                        } else {
+                            Surface(
+                                shape = RoundedCornerShape(9999.dp),
+                                color = Color.Black.copy(alpha = 0.65f),
+                                border = androidx.compose.foundation.BorderStroke(0.8.dp, Color.White.copy(alpha = 0.25f))
+                            ) {
+                                Text(
+                                    text = "${event.distanceKm} km",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ColorTealLight,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    // Avaliação no Topo Direito
                     Surface(
                         shape = RoundedCornerShape(9999.dp),
                         color = Color.Black.copy(alpha = 0.65f),
-                        border = androidx.compose.foundation.BorderStroke(0.8.dp, Color.White.copy(alpha = 0.3f))
+                        border = androidx.compose.foundation.BorderStroke(0.8.dp, Color.White.copy(alpha = 0.25f)),
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            ObsidianPrismRatingIcon(isFilled = true, size = 12.dp, tint = ColorMustard)
+                            Text(
+                                text = "★ %.1f".format(event.ratingAvg),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = ColorMustard
+                            )
+                        }
+                    }
+
+                    // Data e Horário no Rodapé Esquerdo da Foto (sem redundância no corpo do card)
+                    Surface(
+                        shape = RoundedCornerShape(9999.dp),
+                        color = Color.Black.copy(alpha = 0.65f),
+                        border = androidx.compose.foundation.BorderStroke(0.8.dp, Color.White.copy(alpha = 0.25f)),
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(12.dp)
                     ) {
                         Text(
-                            text = event.category.label,
+                            text = "📅 ${event.dateDisplay} às ${event.timeDisplay}",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
                     }
-
-                    if (isInsideGeofence) {
-                        Surface(
-                            shape = RoundedCornerShape(9999.dp),
-                            color = ColorBurntOrange,
-                            border = androidx.compose.foundation.BorderStroke(0.8.dp, Color.White.copy(alpha = 0.4f))
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Box(modifier = Modifier.size(6.dp).background(Color.White, CircleShape))
-                                Text(
-                                    text = "No Local",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                            }
-                        }
-                    } else {
-                        Surface(
-                            shape = RoundedCornerShape(9999.dp),
-                            color = Color.Black.copy(alpha = 0.65f),
-                            border = androidx.compose.foundation.BorderStroke(0.8.dp, Color.White.copy(alpha = 0.25f))
-                        ) {
-                            Text(
-                                text = "${event.distanceKm} km",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = ColorTealLight,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                            )
-                        }
-                    }
-                }
-
-                // Avaliação no Topo Direito
-                Surface(
-                    shape = RoundedCornerShape(9999.dp),
-                    color = Color.Black.copy(alpha = 0.65f),
-                    border = androidx.compose.foundation.BorderStroke(0.8.dp, Color.White.copy(alpha = 0.25f)),
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(12.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        ObsidianPrismRatingIcon(isFilled = true, size = 12.dp, tint = ColorMustard)
-                        Text(
-                            text = "★ %.1f".format(event.ratingAvg),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = ColorMustard
-                        )
-                    }
                 }
             }
 
-            // 2. Dados Sintéticos e Ações Diretas (Sem textão no feed)
+            // 2. Dados Sintéticos e Ações Diretas (Largura total para o título, sem data redundante)
             Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = event.title,
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ColorDarkObsidian,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Text(
-                        text = "${event.dateDisplay}, ${event.timeDisplay}",
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = TextSecondary
-                    )
-                }
+                Text(
+                    text = event.title,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ColorDarkObsidian,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
                 Spacer(modifier = Modifier.height(6.dp))
 
@@ -1056,7 +1059,7 @@ fun ParticipantEventCard(
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Text(
-                                text = "Ver Rolê",
+                                text = "Ver Encontro",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = ColorDarkObsidian

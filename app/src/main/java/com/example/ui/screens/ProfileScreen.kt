@@ -436,7 +436,7 @@ fun ProfileScreen(
                                 color = ColorDarkObsidian
                             )
                             Text(
-                                text = "Regras de presença, OQUANTUM, selos e rolês",
+                                text = "Regras de presença, OQUANTUM, selos e encontros",
                                 fontSize = 12.sp,
                                 color = TextSecondary
                             )

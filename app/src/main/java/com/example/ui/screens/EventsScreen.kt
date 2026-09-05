@@ -45,7 +45,7 @@ enum class EventListFilterMode(val label: String) {
 }
 
 /**
- * Tela Exclusiva de Eventos: Feed completo de encontros e rolês da comunidade
+ * Tela Exclusiva de Eventos: Feed completo de encontros da comunidade
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -127,7 +127,7 @@ fun EventsScreen(
                                     letterSpacing = (-0.3).sp
                                 )
                                 Text(
-                                    text = "${filteredEvents.size} rolês confirmados em SP ✨",
+                                    text = "${filteredEvents.size} encontros confirmados em SP ✨",
                                     fontSize = 12.sp,
                                     color = TextSecondary
                                 )
@@ -167,7 +167,7 @@ fun EventsScreen(
                                 ) {
                                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                                     Text(
-                                        text = "Criar Rolê",
+                                        text = "Criar Encontro",
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -335,7 +335,7 @@ fun EventsScreen(
                     ) {
                         Column {
                             Text(
-                                text = "Rolês Disponíveis",
+                                text = "Encontros Disponíveis",
                                 fontSize = 19.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = ColorDarkObsidian
@@ -517,7 +517,7 @@ fun EventsScreen(
         )
     }
 
-    // Modal de Feedback do Rolê
+    // Modal de Feedback do Encontro
     eventForRating?.let { ev ->
         EventFeedbackDialog(
             event = ev,
