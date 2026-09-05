@@ -44,6 +44,8 @@ enum class EventListFilterMode(val label: String) {
     COM_FOTOS("📸 Com Carretel de Fotos")
 }
 
+data class SearchTag(val keyword: String, val label: String, val category: EventCategory? = null, val mode: EventListFilterMode? = null)
+
 /**
  * Tela Exclusiva de Eventos: Feed completo de encontros da comunidade
  */
@@ -62,8 +64,19 @@ fun EventsScreen(
 ) {
     val context = LocalContext.current
     var searchQuery by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf<EventCategory?>(null) }
-    var selectedFilterMode by remember { mutableStateOf(EventListFilterMode.TODOS) }
+
+    val searchTags = remember {
+        val tags = mutableListOf<SearchTag>()
+        tags.add(SearchTag("@proximos", "Mais Próximos (<1km)", mode = EventListFilterMode.MAIS_PROXIMOS))
+        tags.add(SearchTag("@bombando", "Bombando na Tribo", mode = EventListFilterMode.BOMBANDO))
+        tags.add(SearchTag("@fotos", "Com Carretel de Fotos", mode = EventListFilterMode.COM_FOTOS))
+        
+        EventCategory.values().forEach { cat ->
+            val tagWord = "@" + cat.name.lowercase().replace("_", "")
+            tags.add(SearchTag(tagWord, cat.label, category = cat))
+        }
+        tags
+    }
 
     // Estados para Modais
     var eventForDetails by remember { mutableStateOf<SocialEvent?>(null) }
@@ -74,21 +87,34 @@ fun EventsScreen(
     var eventForManagingMedia by remember { mutableStateOf<SocialEvent?>(null) }
 
     // Filtragem dos eventos
-    val filteredEvents = remember(events, searchQuery, selectedCategory, selectedFilterMode) {
+    val filteredEvents = remember(events, searchQuery) {
+        // Parse active tags
+        val activeTags = searchTags.filter { searchQuery.contains(it.keyword, ignoreCase = true) }
+        
+        val activeCategories = activeTags.mapNotNull { it.category }
+        val activeModes = activeTags.mapNotNull { it.mode }
+        
+        // Clean query for text search
+        var cleanQuery = searchQuery
+        activeTags.forEach { cleanQuery = cleanQuery.replace(it.keyword, "", ignoreCase = true) }
+        cleanQuery = cleanQuery.trim()
+
         events.filter { event ->
-            val matchesQuery = searchQuery.isBlank() ||
-                    event.title.contains(searchQuery, ignoreCase = true) ||
-                    event.description.contains(searchQuery, ignoreCase = true) ||
-                    event.locationName.contains(searchQuery, ignoreCase = true) ||
-                    event.hostName.contains(searchQuery, ignoreCase = true)
+            val matchesQuery = cleanQuery.isBlank() ||
+                    event.title.contains(cleanQuery, ignoreCase = true) ||
+                    event.description.contains(cleanQuery, ignoreCase = true) ||
+                    event.locationName.contains(cleanQuery, ignoreCase = true) ||
+                    event.hostName.contains(cleanQuery, ignoreCase = true)
 
-            val matchesCategory = selectedCategory == null || event.category == selectedCategory
+            val matchesCategory = activeCategories.isEmpty() || activeCategories.contains(event.category)
 
-            val matchesMode = when (selectedFilterMode) {
-                EventListFilterMode.TODOS -> true
-                EventListFilterMode.MAIS_PROXIMOS -> event.distanceKm <= 1.5
-                EventListFilterMode.BOMBANDO -> event.attendeesCount >= 10 || event.likesCount >= 15
-                EventListFilterMode.COM_FOTOS -> event.mediaReel.isNotEmpty()
+            val matchesMode = activeModes.isEmpty() || activeModes.all { mode ->
+                when (mode) {
+                    EventListFilterMode.TODOS -> true
+                    EventListFilterMode.MAIS_PROXIMOS -> event.distanceKm <= 1.5
+                    EventListFilterMode.BOMBANDO -> event.attendeesCount >= 10 || event.likesCount >= 15
+                    EventListFilterMode.COM_FOTOS -> event.mediaReel.isNotEmpty()
+                }
             }
 
             matchesQuery && matchesCategory && matchesMode
@@ -194,137 +220,113 @@ fun EventsScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // 1. Barra de Busca
+                // 1. Barra de Busca com suporte a @ tags
                 item {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        placeholder = {
-                            Text(
-                                text = "Buscar vibe, artista, encontro ou local...",
-                                color = TextMuted,
-                                fontSize = 14.sp
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Buscar",
-                                tint = ColorTeal,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        },
-                        trailingIcon = {
-                            if (searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { searchQuery = "" }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Close,
-                                        contentDescription = "Limpar",
-                                        tint = TextMuted,
-                                        modifier = Modifier.size(18.dp)
-                                    )
+                    val showSuggestions = searchQuery.substringAfterLast(" ").startsWith("@")
+                    val currentWord = if (showSuggestions) searchQuery.substringAfterLast(" ") else ""
+                    val suggestedTags = if (showSuggestions) {
+                        searchTags.filter { it.keyword.startsWith(currentWord, ignoreCase = true) }
+                    } else emptyList()
+
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            placeholder = {
+                                Text(
+                                    text = "Buscar evento ou filtre com @...",
+                                    color = TextMuted,
+                                    fontSize = 14.sp
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Buscar",
+                                    tint = ColorTeal,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            },
+                            trailingIcon = {
+                                if (searchQuery.isNotEmpty()) {
+                                    IconButton(onClick = { searchQuery = "" }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Limpar",
+                                            tint = TextMuted,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .shadow(2.dp, RoundedCornerShape(16.dp), spotColor = Color(0x140B0C10))
+                                .testTag("events_search_field"),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = BgSurface,
+                                unfocusedContainerColor = BgSurface,
+                                focusedBorderColor = ColorTeal,
+                                unfocusedBorderColor = BorderWarm
+                            ),
+                            singleLine = true
+                        )
+
+                        // Painel de sugestões inteligente
+                        androidx.compose.animation.AnimatedVisibility(visible = showSuggestions && suggestedTags.isNotEmpty()) {
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp)
+                                    .shadow(4.dp, RoundedCornerShape(12.dp), spotColor = Color(0x140B0C10)),
+                                shape = RoundedCornerShape(12.dp),
+                                color = BgSurface,
+                                border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm)
+                            ) {
+                                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                                    suggestedTags.take(5).forEach { tag ->
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    val before = searchQuery.substringBeforeLast(" ")
+                                                    searchQuery = if (before == searchQuery) {
+                                                        tag.keyword + " "
+                                                    } else {
+                                                        before + " " + tag.keyword + " "
+                                                    }
+                                                }
+                                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Tag, 
+                                                contentDescription = null, 
+                                                tint = ColorTeal, 
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(12.dp))
+                                            Text(
+                                                text = tag.keyword,
+                                                fontWeight = FontWeight.Bold,
+                                                color = ColorTeal,
+                                                modifier = Modifier.width(110.dp)
+                                            )
+                                            Text(
+                                                text = tag.label,
+                                                color = TextSecondary,
+                                                fontSize = 13.sp
+                                            )
+                                        }
+                                    }
                                 }
                             }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(2.dp, RoundedCornerShape(16.dp), spotColor = Color(0x140B0C10))
-                            .testTag("events_search_field"),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = BgSurface,
-                            unfocusedContainerColor = BgSurface,
-                            focusedBorderColor = ColorTeal,
-                            unfocusedBorderColor = BorderWarm
-                        ),
-                        singleLine = true
-                    )
-                }
-
-                // 2. Filtros Rápidos
-                item {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = PaddingValues(horizontal = 2.dp)
-                    ) {
-                        items(EventListFilterMode.values()) { mode ->
-                            val isSelected = selectedFilterMode == mode
-                            Surface(
-                                shape = RoundedCornerShape(9999.dp),
-                                color = if (isSelected) ColorTeal else BgSurface,
-                                border = androidx.compose.foundation.BorderStroke(
-                                    1.dp,
-                                    if (isSelected) ColorTeal else BorderWarm
-                                ),
-                                modifier = Modifier
-                                    .clickable { selectedFilterMode = mode }
-                                    .shadow(if (isSelected) 3.dp else 1.dp, RoundedCornerShape(9999.dp), spotColor = Color(0x2400796B))
-                            ) {
-                                Text(
-                                    text = mode.label,
-                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
-                                    fontSize = 12.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) Color.White else TextSecondary
-                                )
-                            }
                         }
                     }
                 }
 
-                // 3. Chips de Categorias
-                item {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = PaddingValues(horizontal = 2.dp)
-                    ) {
-                        item {
-                            Surface(
-                                shape = RoundedCornerShape(9999.dp),
-                                color = if (selectedCategory == null) ColorBurntOrange else BgSurface,
-                                border = androidx.compose.foundation.BorderStroke(
-                                    1.dp,
-                                    if (selectedCategory == null) ColorBurntOrange else BorderWarm
-                                ),
-                                modifier = Modifier
-                                    .clickable { selectedCategory = null }
-                                    .shadow(1.dp, RoundedCornerShape(9999.dp))
-                            ) {
-                                Text(
-                                    text = "Todas Categorias",
-                                    modifier = Modifier.padding(horizontal = 13.dp, vertical = 6.dp),
-                                    fontSize = 12.sp,
-                                    fontWeight = if (selectedCategory == null) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (selectedCategory == null) Color.White else TextSecondary
-                                )
-                            }
-                        }
-                        items(EventCategory.values()) { cat ->
-                            val isSelected = selectedCategory == cat
-                            Surface(
-                                shape = RoundedCornerShape(9999.dp),
-                                color = if (isSelected) ColorBurntOrange else BgSurface,
-                                border = androidx.compose.foundation.BorderStroke(
-                                    1.dp,
-                                    if (isSelected) ColorBurntOrange else BorderWarm
-                                ),
-                                modifier = Modifier
-                                    .clickable {
-                                        selectedCategory = if (selectedCategory == cat) null else cat
-                                    }
-                                    .shadow(1.dp, RoundedCornerShape(9999.dp))
-                            ) {
-                                Text(
-                                    text = cat.label,
-                                    modifier = Modifier.padding(horizontal = 13.dp, vertical = 6.dp),
-                                    fontSize = 12.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) Color.White else TextSecondary
-                                )
-                            }
-                        }
-                    }
-                }
+
 
                 // 4. Cabeçalho da Lista
                 item {
@@ -398,8 +400,6 @@ fun EventsScreen(
                                 Button(
                                     onClick = {
                                         searchQuery = ""
-                                        selectedCategory = null
-                                        selectedFilterMode = EventListFilterMode.TODOS
                                     },
                                     colors = ButtonDefaults.buttonColors(containerColor = ColorTeal),
                                     shape = RoundedCornerShape(9999.dp)
