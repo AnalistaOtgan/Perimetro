@@ -13,6 +13,7 @@ data class UserProfile(
     val handle: String,
     val bio: String,
     val avatarEmoji: String = "✨",
+    val avatarUri: String? = null,
     val tier: UserTier = UserTier.PRATA,
     val oquantumBalance: Double = 142.50,
     val badgesCount: Int = 18,

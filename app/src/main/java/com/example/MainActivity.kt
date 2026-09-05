@@ -279,7 +279,8 @@ fun ObsidianApp(repository: ObsidianRepository) {
                         ProfileScreen(
                             user = user,
                             onCreateEventClick = { isCreatingEvent = true },
-                            onLogoutClick = { isLoggedIn = false }
+                            onLogoutClick = { isLoggedIn = false },
+                            onUpdateProfile = { repository.updateUserProfile(it) }
                         )
                     }
                 }

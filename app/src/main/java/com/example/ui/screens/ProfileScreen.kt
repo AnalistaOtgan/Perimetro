@@ -30,9 +30,12 @@ import com.example.ui.theme.*
 fun ProfileScreen(
     user: UserProfile,
     onCreateEventClick: () -> Unit,
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
+    onUpdateProfile: (UserProfile) -> Unit
 ) {
     var showHelpCenter by remember { mutableStateOf(false) }
+    var showEditProfile by remember { mutableStateOf(false) }
+    var showLevelDetails by remember { mutableStateOf(false) }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -108,11 +111,24 @@ fun ProfileScreen(
                         .size(80.dp)
                         .clip(CircleShape)
                         .background(
-                            Brush.linearGradient(listOf(ObsidianTeal, ObsidianBurntOrange))
+                            if (user.avatarUri != null) Color.Transparent else Brush.linearGradient(listOf(ObsidianTeal, ObsidianBurntOrange))
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = user.avatarEmoji, fontSize = 40.sp)
+                    if (user.avatarUri != null) {
+                        // Simulating an Image for now with an Icon if we don't have coil, but we'll use a placeholder
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Avatar",
+                            tint = Color.White,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Brush.linearGradient(listOf(ObsidianTeal, ObsidianBurntOrange)))
+                                .padding(16.dp)
+                        )
+                    } else {
+                        Text(text = user.avatarEmoji, fontSize = 40.sp)
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
@@ -137,8 +153,9 @@ fun ProfileScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Surface(
+                        onClick = { showLevelDetails = true },
                         shape = RoundedCornerShape(12.dp),
                         color = when (user.tier) {
                             UserTier.BRONZE -> BadgeBronze.copy(alpha = 0.2f)
@@ -147,13 +164,21 @@ fun ProfileScreen(
                             UserTier.OBSIDIAN -> DarkObsidian
                         }
                     ) {
-                        Text(
-                            text = "Nível ${user.tier.title}",
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = if (user.tier == UserTier.OBSIDIAN) Color.White else MaterialTheme.colorScheme.onSurface
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
+                            Text(
+                                text = "Nível ${user.tier.title}",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = if (user.tier == UserTier.OBSIDIAN) Color.White else MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                imageVector = Icons.Default.Info, 
+                                contentDescription = "Ver Detalhes", 
+                                tint = if (user.tier == UserTier.OBSIDIAN) Color.White else MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -163,6 +188,16 @@ fun ProfileScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
+
+            Button(
+                onClick = { showEditProfile = true },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = BgSurface),
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Editar Perfil", color = ColorDarkObsidian, fontWeight = FontWeight.Bold)
+            }
 
             // OQUANTUM Wallet Card (RN-039, RN-042)
             Card(
@@ -458,5 +493,293 @@ fun ProfileScreen(
         HelpCenterDialog(
             onDismiss = { showHelpCenter = false }
         )
+    }
+
+    if (showEditProfile) {
+        EditProfileDialog(
+            user = user,
+            onDismiss = { showEditProfile = false },
+            onSave = { updatedProfile ->
+                onUpdateProfile(updatedProfile)
+                showEditProfile = false
+            }
+        )
+    }
+
+    if (showLevelDetails) {
+        LevelDetailsDialog(
+            user = user,
+            onDismiss = { showLevelDetails = false }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditProfileDialog(
+    user: UserProfile,
+    onDismiss: () -> Unit,
+    onSave: (UserProfile) -> Unit
+) {
+    var name by remember { mutableStateOf(user.name) }
+    var handle by remember { mutableStateOf(user.handle) }
+    var bio by remember { mutableStateOf(user.bio) }
+    var selectedEmoji by remember { mutableStateOf(user.avatarEmoji) }
+    var selectedUri by remember { mutableStateOf(user.avatarUri) }
+
+    val emojiOptions = listOf("✨", "⚡", "🎸", "🎧", "👾", "🦊", "🐯", "😎", "🌟", "🔥")
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = BgCanvas,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            Text(
+                text = "Editar Perfil",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = ColorDarkObsidian
+            )
+
+            // Avatar Selector
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                        .background(Brush.linearGradient(listOf(ObsidianTeal, ObsidianBurntOrange))),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (selectedUri != null) {
+                        Icon(Icons.Default.Person, contentDescription = null, tint = Color.White, modifier = Modifier.size(60.dp))
+                    } else {
+                        Text(text = selectedEmoji, fontSize = 50.sp)
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text("Escolha seu Avatar", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Emoji grid (simplified to a row that scrolls)
+                    androidx.compose.foundation.lazy.LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(emojiOptions.size) { index ->
+                            val emoji = emojiOptions[index]
+                            Surface(
+                                shape = CircleShape,
+                                color = if (selectedEmoji == emoji && selectedUri == null) ColorTealLight else BgSurface,
+                                border = androidx.compose.foundation.BorderStroke(1.dp, if (selectedEmoji == emoji && selectedUri == null) ColorTeal else BorderWarm),
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clickable {
+                                        selectedEmoji = emoji
+                                        selectedUri = null
+                                    }
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(emoji, fontSize = 20.sp)
+                                }
+                            }
+                        }
+                        item {
+                            Surface(
+                                shape = CircleShape,
+                                color = if (selectedUri != null) ColorTealLight else BgSurface,
+                                border = androidx.compose.foundation.BorderStroke(1.dp, if (selectedUri != null) ColorTeal else BorderWarm),
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clickable {
+                                        selectedUri = "fake_uri_for_photo" 
+                                    }
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(Icons.Default.PhotoCamera, contentDescription = "Usar Foto", tint = ColorTeal, modifier = Modifier.size(20.dp))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Text Fields
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Nome Completo") },
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = ColorTeal,
+                    unfocusedBorderColor = BorderWarm
+                ),
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            OutlinedTextField(
+                value = handle,
+                onValueChange = { handle = it },
+                label = { Text("Nome de Usuário (@)") },
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = ColorTeal,
+                    unfocusedBorderColor = BorderWarm
+                ),
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            OutlinedTextField(
+                value = bio,
+                onValueChange = { bio = it },
+                label = { Text("Biografia") },
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = ColorTeal,
+                    unfocusedBorderColor = BorderWarm
+                ),
+                shape = RoundedCornerShape(12.dp),
+                maxLines = 3
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Button(
+                onClick = {
+                    onSave(
+                        user.copy(
+                            name = name,
+                            handle = handle,
+                            bio = bio,
+                            avatarEmoji = selectedEmoji,
+                            avatarUri = selectedUri
+                        )
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = ColorTeal),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Salvar Perfil", modifier = Modifier.padding(vertical = 8.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            }
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LevelDetailsDialog(
+    user: UserProfile,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = BgCanvas,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(Icons.Default.MilitaryTech, contentDescription = null, tint = ObsidianMustardYellow, modifier = Modifier.size(48.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Seu Nível: ${user.tier.title}",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = ColorDarkObsidian
+            )
+            Text(
+                text = "${user.badgesCount} Selos • ${user.checkInsCount} Presenças",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary
+            )
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // Tier Timeline
+            val tiers = UserTier.values()
+            
+            tiers.forEachIndexed { index, tier ->
+                val isAchieved = user.tier.ordinal >= tier.ordinal
+                val isCurrent = user.tier == tier
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    crossAxisAlignment = Alignment.Top
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(40.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .background(if (isAchieved) ColorTeal else BorderLight),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isAchieved) {
+                                Icon(Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                            }
+                        }
+                        
+                        if (index < tiers.size - 1) {
+                            Box(
+                                modifier = Modifier
+                                    .width(2.dp)
+                                    .height(60.dp)
+                                    .background(if (user.tier.ordinal > tier.ordinal) ColorTeal else BorderLight)
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.width(16.dp))
+                    
+                    Column(modifier = Modifier.padding(bottom = 24.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Nível ${tier.title}",
+                                fontWeight = FontWeight.Bold,
+                                color = if (isAchieved) ColorDarkObsidian else TextMuted,
+                                fontSize = 16.sp
+                            )
+                            if (isCurrent) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Surface(shape = RoundedCornerShape(8.dp), color = ColorTealLight) {
+                                    Text("Atual", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = ColorTeal, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                }
+                            }
+                        }
+                        Text(
+                            text = "Requer: ${tier.threshold} pontos/selos",
+                            fontSize = 12.sp,
+                            color = if (isAchieved) TextSecondary else TextMuted
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Vantagens: ${tier.storyPhotos} fotos no Stories (duração: ${tier.storyDuration})",
+                            fontSize = 13.sp,
+                            color = if (isAchieved) ObsidianTeal else TextMuted,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+        }
     }
 }

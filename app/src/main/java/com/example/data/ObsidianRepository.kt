@@ -26,6 +26,10 @@ class ObsidianRepository {
     )
     val currentUser: StateFlow<UserProfile> = _currentUser.asStateFlow()
 
+    fun updateUserProfile(profile: UserProfile) {
+        _currentUser.value = profile
+    }
+
     private val _events = MutableStateFlow<List<SocialEvent>>(
         listOf(
             SocialEvent(
