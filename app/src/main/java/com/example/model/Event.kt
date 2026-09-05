@@ -47,5 +47,7 @@ data class SocialEvent(
     val geofenceRadiusMeters: Int = 150,
     val bannerTheme: String = "tech",
     val likesCount: Int = 42,
-    val isLiked: Boolean = false
+    val isLiked: Boolean = false,
+    val latitude: Double = -23.5615,
+    val longitude: Double = -46.6560
 )

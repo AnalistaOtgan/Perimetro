@@ -52,7 +52,9 @@ class ObsidianRepository {
                     "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800&q=80"
                 ),
                 geofenceRadiusMeters = 150,
-                bannerTheme = "tech"
+                bannerTheme = "tech",
+                latitude = -23.5932,
+                longitude = -46.6853
             ),
             SocialEvent(
                 id = "ev_2",
@@ -77,7 +79,9 @@ class ObsidianRepository {
                     "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80"
                 ),
                 geofenceRadiusMeters = 200,
-                bannerTheme = "code"
+                bannerTheme = "code",
+                latitude = -23.5548,
+                longitude = -46.6582
             ),
             SocialEvent(
                 id = "ev_3",
@@ -102,7 +106,9 @@ class ObsidianRepository {
                     "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&q=80"
                 ),
                 geofenceRadiusMeters = 100,
-                bannerTheme = "rooftop"
+                bannerTheme = "rooftop",
+                latitude = -23.5435,
+                longitude = -46.6432
             ),
             SocialEvent(
                 id = "ev_4",
@@ -121,7 +127,9 @@ class ObsidianRepository {
                 tags = listOf("Custo-benefício", "Bebidas", "Som", "Decoração"),
                 hostName = "Cervejaria Malte • 🛡️",
                 geofenceRadiusMeters = 80,
-                bannerTheme = "beer"
+                bannerTheme = "beer",
+                latitude = -23.5620,
+                longitude = -46.6912
             ),
             SocialEvent(
                 id = "ev_5",
@@ -140,7 +148,9 @@ class ObsidianRepository {
                 tags = listOf("Exclusivo", "Segurança", "Gourmet", "Networking"),
                 hostName = "Conselho Obsidian • 🛡️",
                 geofenceRadiusMeters = 50,
-                bannerTheme = "gala"
+                bannerTheme = "gala",
+                latitude = -23.5980,
+                longitude = -46.7120
             )
         )
     )

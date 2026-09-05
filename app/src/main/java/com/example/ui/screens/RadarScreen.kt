@@ -43,20 +43,23 @@ import com.example.ui.components.ObsidianRatingIconTrigger
 import com.example.ui.components.ObsidianResonateButton
 import com.example.ui.components.ObsidianStationPortalIcon
 import com.example.ui.components.OrganicCirclesBackground
+import com.example.ui.components.InteractiveCityEventMap
 import com.example.ui.components.ParticipantSonarRadar
 import com.example.ui.theme.*
 
 enum class ParticipantRadarViewMode {
-    SONAR,
+    MAPA,
     LISTA
 }
 
 enum class ParticipantFilterMode(val label: String) {
-    TODOS("Todos"),
-    NO_MEU_RAIO("🔥 No Meu Raio (< 500m)"),
-    AO_VIVO("✨ Ao Vivo Agora"),
-    TRIBO("👥 Minha Tribo"),
-    SELOS_RAROS("🏆 Selos Raros")
+    TODOS("🔥 Todos"),
+    NO_MEU_RAIO("🚶 < 1.5km"),
+    AO_VIVO("✨ Ao Vivo"),
+    BARES("🍸 Bares"),
+    TECH("💻 Tech"),
+    SHOWS("🎸 Shows"),
+    TRIBO("👥 Minha Tribo")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,6 +78,10 @@ fun RadarScreen(
     var eventForDetails by remember { mutableStateOf<SocialEvent?>(null) }
     var eventForRouteGuidance by remember { mutableStateOf<SocialEvent?>(null) }
     var eventForStation by remember { mutableStateOf<SocialEvent?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
+    var currentFilter by remember { mutableStateOf(ParticipantFilterMode.TODOS) }
+    var isRouteActive by remember { mutableStateOf(false) }
+    var recenterRequested by remember { mutableStateOf(false) }
 
     // Pulso do GPS ativo
     val infiniteTransition = rememberInfiniteTransition(label = "radar_pulse")
@@ -88,228 +95,599 @@ fun RadarScreen(
         label = "gps_pulse"
     )
 
-    // Evento mais próximo que está no raio de geofence imediato
-    val immediateNearbyEvent = remember(events) {
-        events.firstOrNull { it.distanceKm <= 0.8 }
+    // Filtragem dinâmica de encontros por texto de busca e pílulas de filtro
+    val filteredEvents = remember(events, searchQuery, currentFilter) {
+        events.filter { ev ->
+            val matchesSearch = searchQuery.isBlank() ||
+                ev.title.contains(searchQuery, ignoreCase = true) ||
+                ev.locationName.contains(searchQuery, ignoreCase = true) ||
+                ev.category.label.contains(searchQuery, ignoreCase = true) ||
+                ev.tags.any { it.contains(searchQuery, ignoreCase = true) }
+
+            val matchesFilter = when (currentFilter) {
+                ParticipantFilterMode.TODOS -> true
+                ParticipantFilterMode.NO_MEU_RAIO -> ev.distanceKm <= 1.5
+                ParticipantFilterMode.AO_VIVO -> ev.distanceKm <= 3.5
+                ParticipantFilterMode.BARES -> ev.category == EventCategory.BAR
+                ParticipantFilterMode.TECH -> ev.category == EventCategory.TECNOLOGIA
+                ParticipantFilterMode.SHOWS -> ev.category == EventCategory.SHOW
+                ParticipantFilterMode.TRIBO -> ev.attendeesCount >= 10
+            }
+
+            matchesSearch && matchesFilter
+        }
+    }
+
+    // Manter um evento selecionado válido
+    LaunchedEffect(filteredEvents) {
+        if (selectedSonarEvent == null || filteredEvents.none { it.id == selectedSonarEvent?.id }) {
+            selectedSonarEvent = filteredEvents.firstOrNull()
+        }
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BgCanvas)
+            .background(Color(0xFF0D1415))
     ) {
-        // Fluid Organic Pattern Background
-        OrganicCirclesBackground()
+        // 1. CAMADA BASE (100% DA TELA): MAPA URBANO INTERATIVO ESTILO UBER / 99 POP
+        InteractiveCityEventMap(
+            events = filteredEvents,
+            selectedEvent = selectedSonarEvent,
+            onSelectEvent = { ev ->
+                selectedSonarEvent = ev
+                isRouteActive = true
+            },
+            isRouteActive = isRouteActive,
+            onRecenterRequested = recenterRequested,
+            onResetRecenter = { recenterRequested = false },
+            modifier = Modifier.fillMaxSize()
+        )
 
-        Scaffold(
-            containerColor = Color.Transparent,
-            topBar = {
-                // Top App Bar do Participante
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = BgSurface.copy(alpha = 0.96f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight)
+        // 2. CONTROLES FLUTUANTES NO TOPO (Header, Busca e Filtros estilo Uber)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(horizontal = 14.dp, vertical = 6.dp)
+                .align(Alignment.TopCenter)
+        ) {
+            // Barra Superior de Marca, Presença Ao Vivo e Pontos OQ
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                color = BgSurface.copy(alpha = 0.94f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm),
+                shadowElevation = 4.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .statusBarsPadding()
-                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                        ObsidianLogoEmblem(size = 28.dp)
+                        Column {
+                            Text(
+                                text = "Radar de Encontros",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Black,
+                                color = ColorDarkObsidian,
+                                letterSpacing = (-0.3).sp
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .background(ColorTeal.copy(alpha = gpsPulseAlpha), CircleShape)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "São Paulo, SP • Ao vivo agora ✨",
+                                    fontSize = 10.5.sp,
+                                    color = ColorTeal,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(9999.dp),
+                            color = ColorMustardLight,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, ColorMustard.copy(alpha = 0.4f))
                         ) {
-                            // Left: Logo & Status Presencial do Participante
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                ObsidianLogoEmblem(size = 32.dp)
-                                Column {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(
-                                            text = "Radar de Presença",
-                                            fontSize = 18.sp,
-                                            fontWeight = FontWeight.Black,
-                                            letterSpacing = (-0.5).sp,
-                                            color = ColorDarkObsidian
-                                        )
-                                    }
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(7.dp)
-                                                .background(
-                                                    ColorTeal.copy(alpha = gpsPulseAlpha),
-                                                    CircleShape
-                                                )
-                                        )
-                                        Spacer(modifier = Modifier.width(5.dp))
-                                        Text(
-                                            text = "São Paulo, SP • Ao vivo agora ✨",
-                                            fontSize = 11.sp,
-                                            color = ColorTeal,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                    }
-                                }
-                            }
+                            Text(
+                                text = "⚡ 248.8 OQ",
+                                fontSize = 11.sp,
+                                color = ColorMustardHover,
+                                fontWeight = FontWeight.Black,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
+                        }
 
-                            // Right: Saldo OQ & Tier do Participante
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Surface(
-                                    shape = RoundedCornerShape(9999.dp),
-                                    color = ColorMustardLight,
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, ColorMustard.copy(alpha = 0.4f))
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            text = "⚡ 248.8 OQ",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = ColorMustardHover,
-                                            fontWeight = FontWeight.Black
-                                        )
-                                    }
-                                }
-
-                                Surface(
-                                    shape = RoundedCornerShape(9999.dp),
-                                    color = ColorTealLight,
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, ColorTealBorder)
-                                ) {
-                                    Text(
-                                        text = currentUserTier.title,
-                                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = ColorTeal,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
+                        Surface(
+                            shape = RoundedCornerShape(9999.dp),
+                            color = ColorTealLight,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, ColorTealBorder)
+                        ) {
+                            Text(
+                                text = currentUserTier.title,
+                                fontSize = 10.5.sp,
+                                color = ColorTeal,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
                         }
                     }
                 }
             }
-        ) { innerPadding ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .testTag("radar_event_list"),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Barra de Busca Flutuante ("Para onde quer ir hoje? Buscar encontro...")
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(9999.dp),
+                color = BgSurface.copy(alpha = 0.95f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm),
+                shadowElevation = 6.dp
             ) {
-                // 1. Sonar Interativo Completo do Radar
-                item {
-                    ParticipantSonarRadar(
-                        events = events,
-                        selectedEvent = selectedSonarEvent,
-                        onSelectEvent = { ev ->
-                            selectedSonarEvent = ev
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Buscar",
+                        tint = ColorTeal,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = {
+                            Text(
+                                text = "Para onde vamos? Buscar encontro ou vibe...",
+                                fontSize = 13.sp,
+                                color = TextMuted
+                            )
                         },
-                        onCheckInClick = { ev ->
-                            onCheckInClick(ev)
-                        }
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        ),
+                        singleLine = true,
+                        modifier = Modifier.weight(1f)
                     )
-                }
-
-                // 2. Alerta Imediato quando estiver no perímetro físico: "VOCÊ ESTÁ NO RAIO DE UM ENCONTRO!"
-                if (immediateNearbyEvent != null) {
-                    item {
-                        ParticipantInGeofenceCard(
-                            event = immediateNearbyEvent,
-                            onCheckInClick = { onCheckInClick(immediateNearbyEvent) },
-                            onOpenRoute = { eventForRouteGuidance = immediateNearbyEvent },
-                            onOpenDetails = { eventForDetails = immediateNearbyEvent }
-                        )
-                    }
-                }
-
-                // 3. Galera nos Encontros & Vibe da Comunidade da Tribo
-                item {
-                    TribeSocialPresenceBar(
-                        onFriendClick = { friend ->
-                            Toast.makeText(
-                                context,
-                                "${friend.name} está em '${friend.eventTitle}' (${friend.statusText})",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    )
-                }
-
-                // 4. Atalho Elegante para o Feed Exclusivo de Eventos
-                item {
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onNavigateToEvents() }
-                            .shadow(3.dp, RoundedCornerShape(20.dp), spotColor = Color(0x2400796B))
-                            .testTag("shortcut_to_events_tab"),
-                        shape = RoundedCornerShape(20.dp),
-                        color = BgSurface,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(18.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(
+                            onClick = { searchQuery = "" },
+                            modifier = Modifier.size(28.dp)
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(14.dp),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(46.dp)
-                                        .background(ColorTealLight, CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    ObsidianEventsNexusIcon(
-                                        selected = true,
-                                        tint = ColorTeal,
-                                        size = 24.dp,
-                                        animated = true
-                                    )
-                                }
-                                Column {
-                                    Text(
-                                        text = "Explorar Encontros & Fotos",
-                                        fontSize = 15.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = ColorDarkObsidian
-                                    )
-                                    Text(
-                                        text = "Galeria visual de encontros e presença real",
-                                        fontSize = 12.sp,
-                                        color = TextSecondary
-                                    )
-                                }
-                            }
                             Icon(
-                                imageVector = Icons.Default.ArrowForwardIos,
-                                contentDescription = null,
-                                tint = ColorTeal,
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Limpar busca",
+                                tint = TextMuted,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
                     }
                 }
+            }
 
-                // 5. Rodapé Oficial da Comunidade Obsidian
-                item {
-                    ObsidianDesignFooter()
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Pílulas de Filtros Horizontais
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                items(ParticipantFilterMode.values()) { filterMode ->
+                    ParticipantFilterChip(
+                        label = filterMode.label,
+                        isSelected = currentFilter == filterMode,
+                        onClick = { currentFilter = filterMode }
+                    )
+                }
+            }
+        }
+
+        // 3. BOTÕES FLUTUANTES LATERAIS (Recentralizar GPS e Alternar Rota)
+        Column(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 16.dp, bottom = 240.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // Botão Recentralizar GPS no Usuário
+            Surface(
+                shape = CircleShape,
+                color = BgSurface.copy(alpha = 0.95f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm),
+                shadowElevation = 8.dp,
+                modifier = Modifier
+                    .size(46.dp)
+                    .clickable {
+                        recenterRequested = true
+                        Toast.makeText(context, "GPS centralizado na sua localização", Toast.LENGTH_SHORT).show()
+                    }
+                    .testTag("recenter_gps_btn")
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.MyLocation,
+                        contentDescription = "Centralizar no meu local",
+                        tint = ColorTeal,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+            }
+
+            // Botão Ativar / Desativar Traçado de Rota Estilo Uber
+            if (selectedSonarEvent != null) {
+                Surface(
+                    shape = CircleShape,
+                    color = if (isRouteActive) ColorTeal else BgSurface.copy(alpha = 0.95f),
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        if (isRouteActive) ColorTeal else BorderWarm
+                    ),
+                    shadowElevation = 8.dp,
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clickable {
+                            isRouteActive = !isRouteActive
+                        }
+                        .testTag("toggle_route_btn")
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.DirectionsWalk,
+                            contentDescription = "Ver rota",
+                            tint = if (isRouteActive) Color.White else ColorTeal,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        // 4. PAINEL INFERIOR FLUTUANTE DE ENCONTROS (Bottom Drawer Estilo Uber / 99 Pop)
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .shadow(16.dp, RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp), spotColor = Color.Black),
+            shape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp),
+            color = BgSurface.copy(alpha = 0.98f),
+            border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
+                // Pílula / Handle de arraste superior
+                Box(
+                    modifier = Modifier
+                        .width(36.dp)
+                        .height(4.dp)
+                        .background(Color(0xFF8899A6).copy(alpha = 0.4f), CircleShape)
+                        .align(Alignment.CenterHorizontally)
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Card do Encontro Selecionado / Focado
+                selectedSonarEvent?.let { activeEvent ->
+                    val isInGeofence = activeEvent.distanceKm <= 0.8
+                    val walkMins = (activeEvent.distanceKm * 12).toInt().coerceAtLeast(3)
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(BgSecondary, RoundedCornerShape(18.dp))
+                            .border(
+                                1.2.dp,
+                                if (isInGeofence) ColorBurntOrange else BorderWarm,
+                                RoundedCornerShape(18.dp)
+                            )
+                            .clickable { eventForDetails = activeEvent }
+                            .padding(14.dp)
+                    ) {
+                        // Linha Superior: Categoria, Distância/Tempo e Nota
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(9999.dp),
+                                    color = ColorTealLight,
+                                    border = androidx.compose.foundation.BorderStroke(0.8.dp, ColorTealBorder)
+                                ) {
+                                    Text(
+                                        text = activeEvent.category.label,
+                                        fontSize = 10.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = ColorTeal,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    )
+                                }
+
+                                if (isInGeofence) {
+                                    Surface(
+                                        shape = RoundedCornerShape(9999.dp),
+                                        color = ColorBurntOrangeLight,
+                                        border = androidx.compose.foundation.BorderStroke(0.8.dp, ColorBurntOrange.copy(alpha = 0.5f))
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Box(modifier = Modifier.size(6.dp).background(ColorBurntOrange, CircleShape))
+                                            Text(
+                                                text = "No Perímetro!",
+                                                fontSize = 10.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = ColorBurntOrangeHover
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    Text(
+                                        text = "${activeEvent.distanceKm} km • ${walkMins} min a pé",
+                                        fontSize = 11.5.sp,
+                                        color = TextMuted,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
+
+                            // Avaliação
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                ObsidianPrismRatingIcon(isFilled = true, size = 12.dp, tint = ColorMustard)
+                                Text(
+                                    text = "★ %.1f".format(activeEvent.ratingAvg),
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ColorMustardHover
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Título do Encontro
+                        Text(
+                            text = activeEvent.title,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = ColorDarkObsidian,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        // Endereço / Local e Tribo
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Place,
+                                    contentDescription = null,
+                                    tint = ColorBurntOrange,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = activeEvent.locationName,
+                                    fontSize = 12.sp,
+                                    color = TextSecondary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            Text(
+                                text = "👥 ${activeEvent.attendeesCount} confirmados",
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = ColorTeal
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Linha de Ações (Estilo Uber: Rota / Como Chegar e Check-in)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (isInGeofence) {
+                                // Dentro do perímetro: botão de check-in vibrante
+                                Button(
+                                    onClick = { onCheckInClick(activeEvent) },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = ColorBurntOrange,
+                                        contentColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(42.dp)
+                                        .testTag("geofence_instant_checkin_btn")
+                                ) {
+                                    Text(
+                                        text = "🎉 Fazer Check-in (+50 OQ)",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            } else {
+                                // Fora do perímetro: botão de Como Chegar / Ver Rota
+                                Button(
+                                    onClick = {
+                                        isRouteActive = true
+                                        eventForRouteGuidance = activeEvent
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = ColorTeal,
+                                        contentColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(42.dp)
+                                        .testTag("route_guidance_btn")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Navigation,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Como Chegar (${walkMins} min)",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
+                            // Botão Secundário: Ver Encontro
+                            OutlinedButton(
+                                onClick = { eventForDetails = activeEvent },
+                                shape = RoundedCornerShape(12.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = ColorDarkObsidian),
+                                modifier = Modifier.height(42.dp)
+                            ) {
+                                Text(
+                                    text = "Ver Encontro",
+                                    fontSize = 12.5.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Carrossel Horizontal de Outros Encontros Próximos
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Outros Encontros Próximos (${filteredEvents.size})",
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = ColorDarkObsidian
+                    )
+                    Text(
+                        text = "Ver Feed Completo >",
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = ColorTeal,
+                        modifier = Modifier
+                            .clickable { onNavigateToEvents() }
+                            .testTag("shortcut_to_events_tab")
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(filteredEvents) { ev ->
+                        val isCurrent = ev.id == selectedSonarEvent?.id
+                        Surface(
+                            modifier = Modifier
+                                .width(180.dp)
+                                .clickable {
+                                    selectedSonarEvent = ev
+                                    isRouteActive = true
+                                },
+                            shape = RoundedCornerShape(14.dp),
+                            color = if (isCurrent) ColorTealLight else BgSecondary,
+                            border = androidx.compose.foundation.BorderStroke(
+                                width = if (isCurrent) 1.5.dp else 1.dp,
+                                color = if (isCurrent) ColorTeal else BorderWarm
+                            )
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = ev.category.label,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isCurrent) ColorTeal else TextMuted
+                                    )
+                                    Text(
+                                        text = "${ev.distanceKm} km",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = ColorDarkObsidian
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = ev.title,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ColorDarkObsidian,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "★ ${ev.ratingAvg} • 👥 ${ev.attendeesCount}",
+                                    fontSize = 10.5.sp,
+                                    color = TextMuted
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
