@@ -530,32 +530,44 @@ fun RadarScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Linha de Ações (Estilo Uber: Rota / Como Chegar e Check-in)
+                        // Linha de Ações (Estilo Uber: Rota / Como Chegar e Check-in com Ícone Exclusivo SEM TEXTO)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             if (isInGeofence) {
-                                // Dentro do perímetro: botão de check-in vibrante
-                                Button(
-                                    onClick = { onCheckInClick(activeEvent) },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = ColorBurntOrange,
-                                        contentColor = Color.White
-                                    ),
-                                    shape = RoundedCornerShape(12.dp),
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(42.dp)
-                                        .testTag("geofence_instant_checkin_btn")
+                                // Ação de Presença acionada puramente pelo Ícone Exclusivo de Check-in (SEM TEXTO)
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
-                                    Text(
-                                        text = "🎉 Fazer Check-in (+50 OQ)",
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold
+                                    ObsidianCheckInIconTrigger(
+                                        onClick = { onCheckInClick(activeEvent) },
+                                        size = 46.dp,
+                                        iconSize = 24.dp,
+                                        containerColor = ColorBurntOrange,
+                                        isPulsing = true,
+                                        contentDescription = "Validar Presença Física no Encontro",
+                                        modifier = Modifier.testTag("geofence_instant_checkin_btn")
                                     )
+
+                                    Surface(
+                                        shape = RoundedCornerShape(9999.dp),
+                                        color = ColorMustardLight,
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, ColorMustard.copy(alpha = 0.4f))
+                                    ) {
+                                        Text(
+                                            text = "⚡ +50 OQ",
+                                            fontSize = 11.5.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = ColorMustardHover,
+                                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
+                                        )
+                                    }
                                 }
+
+                                Spacer(modifier = Modifier.weight(1f))
                             } else {
                                 // Fora do perímetro: botão de Como Chegar / Ver Rota
                                 Button(
