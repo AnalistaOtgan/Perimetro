@@ -30,11 +30,10 @@ import com.example.ui.theme.*
 fun ProfileScreen(
     user: UserProfile,
     onCreateEventClick: () -> Unit,
-    onLogoutClick: () -> Unit,
-    onUpdateProfile: (UserProfile) -> Unit
+    onEditProfileClick: () -> Unit,
+    onLogoutClick: () -> Unit
 ) {
     var showHelpCenter by remember { mutableStateOf(false) }
-    var showEditProfile by remember { mutableStateOf(false) }
     var showLevelDetails by remember { mutableStateOf(false) }
     Box(
         modifier = Modifier
@@ -190,7 +189,7 @@ fun ProfileScreen(
             )
 
             Button(
-                onClick = { showEditProfile = true },
+                onClick = onEditProfileClick,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = BgSurface),
                 border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm),
@@ -495,187 +494,11 @@ fun ProfileScreen(
         )
     }
 
-    if (showEditProfile) {
-        EditProfileDialog(
-            user = user,
-            onDismiss = { showEditProfile = false },
-            onSave = { updatedProfile ->
-                onUpdateProfile(updatedProfile)
-                showEditProfile = false
-            }
-        )
-    }
-
     if (showLevelDetails) {
         LevelDetailsDialog(
             user = user,
             onDismiss = { showLevelDetails = false }
         )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun EditProfileDialog(
-    user: UserProfile,
-    onDismiss: () -> Unit,
-    onSave: (UserProfile) -> Unit
-) {
-    var name by remember { mutableStateOf(user.name) }
-    var handle by remember { mutableStateOf(user.handle) }
-    var bio by remember { mutableStateOf(user.bio) }
-    var selectedEmoji by remember { mutableStateOf(user.avatarEmoji) }
-    var selectedUri by remember { mutableStateOf(user.avatarUri) }
-
-    val emojiOptions = listOf("✨", "⚡", "🎸", "🎧", "👾", "🦊", "🐯", "😎", "🌟", "🔥")
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        containerColor = BgCanvas,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            Text(
-                text = "Editar Perfil",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = ColorDarkObsidian
-            )
-
-            // Avatar Selector
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(CircleShape)
-                        .background(Brush.linearGradient(listOf(ObsidianTeal, ObsidianBurntOrange))),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (selectedUri != null) {
-                        Icon(Icons.Default.Person, contentDescription = null, tint = Color.White, modifier = Modifier.size(60.dp))
-                    } else {
-                        Text(text = selectedEmoji, fontSize = 50.sp)
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Text("Escolha seu Avatar", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Emoji grid (simplified to a row that scrolls)
-                    androidx.compose.foundation.lazy.LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(emojiOptions.size) { index ->
-                            val emoji = emojiOptions[index]
-                            Surface(
-                                shape = CircleShape,
-                                color = if (selectedEmoji == emoji && selectedUri == null) ColorTealLight else BgSurface,
-                                border = androidx.compose.foundation.BorderStroke(1.dp, if (selectedEmoji == emoji && selectedUri == null) ColorTeal else BorderWarm),
-                                modifier = Modifier
-                                    .size(44.dp)
-                                    .clickable {
-                                        selectedEmoji = emoji
-                                        selectedUri = null
-                                    }
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text(emoji, fontSize = 20.sp)
-                                }
-                            }
-                        }
-                        item {
-                            Surface(
-                                shape = CircleShape,
-                                color = if (selectedUri != null) ColorTealLight else BgSurface,
-                                border = androidx.compose.foundation.BorderStroke(1.dp, if (selectedUri != null) ColorTeal else BorderWarm),
-                                modifier = Modifier
-                                    .size(44.dp)
-                                    .clickable {
-                                        selectedUri = "fake_uri_for_photo" 
-                                    }
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(Icons.Default.PhotoCamera, contentDescription = "Usar Foto", tint = ColorTeal, modifier = Modifier.size(20.dp))
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Text Fields
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Nome Completo") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ColorTeal,
-                    unfocusedBorderColor = BorderWarm
-                ),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            OutlinedTextField(
-                value = handle,
-                onValueChange = { handle = it },
-                label = { Text("Nome de Usuário (@)") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ColorTeal,
-                    unfocusedBorderColor = BorderWarm
-                ),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            OutlinedTextField(
-                value = bio,
-                onValueChange = { bio = it },
-                label = { Text("Biografia") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ColorTeal,
-                    unfocusedBorderColor = BorderWarm
-                ),
-                shape = RoundedCornerShape(12.dp),
-                maxLines = 3
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Button(
-                onClick = {
-                    onSave(
-                        user.copy(
-                            name = name,
-                            handle = handle,
-                            bio = bio,
-                            avatarEmoji = selectedEmoji,
-                            avatarUri = selectedUri
-                        )
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = ColorTeal),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("Salvar Perfil", modifier = Modifier.padding(vertical = 8.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            }
-            Spacer(modifier = Modifier.height(32.dp))
-        }
     }
 }
 

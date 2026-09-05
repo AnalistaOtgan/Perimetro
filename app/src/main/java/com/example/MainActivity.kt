@@ -50,7 +50,8 @@ enum class NavigationDest(val title: String) {
     EVENTS("Eventos"),
     CHECKIN("Presença"),
     BADGES("Tribo"),
-    PROFILE("Perfil")
+    PROFILE("Perfil"),
+    EDIT_PROFILE("Editar Perfil")
 }
 
 @Composable
@@ -88,7 +89,8 @@ fun ObsidianApp(repository: ObsidianRepository) {
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             bottomBar = {
-                NavigationBar(
+                if (currentDest != NavigationDest.EDIT_PROFILE) {
+                    NavigationBar(
                     containerColor = BgSurface,
                     tonalElevation = 0.dp,
                     modifier = Modifier
@@ -194,9 +196,9 @@ fun ObsidianApp(repository: ObsidianRepository) {
                             indicatorColor = ColorTealLight,
                             unselectedIconColor = TextMuted,
                             unselectedTextColor = TextMuted
-                        ),
                         modifier = Modifier.testTag("nav_profile")
                     )
+                }
                 }
             }
         ) { innerPadding ->
@@ -279,8 +281,19 @@ fun ObsidianApp(repository: ObsidianRepository) {
                         ProfileScreen(
                             user = user,
                             onCreateEventClick = { isCreatingEvent = true },
-                            onLogoutClick = { isLoggedIn = false },
-                            onUpdateProfile = { repository.updateUserProfile(it) }
+                            onEditProfileClick = { currentScreen = NavigationDest.EDIT_PROFILE },
+                            onLogoutClick = { isLoggedIn = false }
+                        )
+                    }
+
+                    NavigationDest.EDIT_PROFILE -> {
+                        com.example.ui.screens.EditProfileScreen(
+                            user = user,
+                            onBack = { currentScreen = NavigationDest.PROFILE },
+                            onSave = { updatedProfile ->
+                                repository.updateUserProfile(updatedProfile)
+                                currentScreen = NavigationDest.PROFILE
+                            }
                         )
                     }
                 }
