@@ -52,10 +52,10 @@ const val GEO_SCALE_FACTOR = 16000.0
  *
  * Suporta:
  * - Gestos de arrastar (pan) e pinça (pinch-to-zoom).
- * - Renderização vetorial estilizada da cidade (Avenidas, ruas secundárias, quadras, parques, Rio Pinheiros).
- * - Beacon de GPS do usuário com pulso contínuo e anel de geofence de proximidade.
- * - Linha de rota estilo Uber (curva dinâmica com pulso de deslocamento até o encontro ativo).
- * - Pins interativos de eventos com badge de categoria, nota, participantes e animação de seleção.
+ * - Motor nativo de renderização de mapa mundi em estilo pontilhado (dot matrix).
+ * - O mapa mantém a proporção e densidade dos pontos ao dar zoom, revelando mais do mapa real.
+ * - Suporta gestos de pan e pinch-to-zoom suaves.
+ * - Pins interativos flutuando sobre a grade global.
  */
 @Composable
 fun InteractiveCityEventMap(
@@ -170,21 +170,11 @@ fun InteractiveCityEventMap(
             )
         }
 
-        // 1. RENDERIZAÇÃO DO MAPA VETORIAL URBANO NO CANVAS
+        // 1. RENDERIZAÇÃO DO MAPA MUNDI PONTILHADO (DOT MATRIX) NO CANVAS
         Canvas(modifier = Modifier.fillMaxSize()) {
-            // A. Fundo de bairros e quarteirões urbanos
-            drawUrbanBlocks(centerX, centerY, zoomScale)
+            drawDottedWorldMap(panX, panY, zoomScale)
 
-            // B. Parques e Áreas Verdes (Ibirapuera, Trianon, etc.)
-            drawUrbanParks(centerX, centerY, zoomScale)
-
-            // C. Rio Pinheiros e hidrografia de São Paulo
-            drawUrbanWaterways(centerX, centerY, zoomScale)
-
-            // D. Malha Viária (Avenidas principais e ruas locais)
-            drawUrbanRoadNetwork(centerX, centerY, zoomScale)
-
-            // E. Anéis de Alcance / Radar Físico de Proximidade (500m, 1.5km, 3km)
+            // E. Anéis de Alcance (opcional - mantido para contexto de proximidade)
             drawProximityRadiusRings(centerX, centerY, zoomScale)
 
             // F. Rota Dinâmica estilo Uber (se ativada ou evento selecionado)
@@ -399,161 +389,87 @@ fun EventMapPinMarker(
 }
 
 // -----------------------------------------------------------------------------------------
-// FUNÇÕES DE DESENHO VETORIAL DA CIDADE (SÃO PAULO MAP STYLE)
+// FUNÇÕES DE DESENHO DO MAPA MUNDI PONTILHADO
 // -----------------------------------------------------------------------------------------
 
+private val WORLD_MAP_MATRIX = listOf(
+    "                                                                                ",
+    "                                                                                ",
+    "                                                                                ",
+    "                   xxxxxx                                                       ",
+    "                xxxxxxxxxxxxx            xxxxxx                                 ",
+    "               xxxxxxxxxxxxxxx          xxxxxxxxxxx                             ",
+    "              xxxxxxxxxxxxxxxxx       xxxxxxxxxxxxxxx                           ",
+    "              xxxxxxxxxxxxxxxxxx     xxxxxxxxxxxxxxxxxx      xxxxxx             ",
+    "               xxxxxxxxxxxxxxxxxx   xxxxxxxxxxxxxxxxxxxx    xxxxxxxxx           ",
+    "                xxxxxxxxxxxxxxxxx   xxxxxxxxxxxxxxxxxxxxx   xxxxxxxxx           ",
+    "                 xxxxxxxxxxxxxxxx   xxxxxxxxxxxxxxxxxxxxx   xxxxxxxxx           ",
+    "                  xxxxxxxxxxxxxxx   xxxxxxxxxxxxxxxxxxxx     xxxxxxx            ",
+    "                   xxxxxxxxxxxx      xxxxxxxxxxxxxxxxxxx      xxxxx             ",
+    "                    xxxxxxxxx         xxxxxxxxxxxxxxxxx        xxx              ",
+    "                     xxxxxxx           xxxxxxxxxxxxxxx          x               ",
+    "                      xxxxxx           xxxxxxxxxxxxxxx                          ",
+    "                       xxxxx             xxxxxxxxxxx                            ",
+    "                        xxxx              xxxxxxxxx                  xxx        ",
+    "                         xxx               xxxxxxx                  xxxxx       ",
+    "                          xx               xxxxxxx                   xxxx       ",
+    "                                            xxxxxx                    xx        ",
+    "                                             xxxx                               ",
+    "                                             xxxx                               ",
+    "                                              xx                                ",
+    "                                                                                ",
+    "                                                                                ",
+    "                                                                                "
+)
+
 /**
- * Desenha os blocos e quarteirões da cidade com textura sutil
+ * Desenha a grade de pontos que forma o mapa mundi.
+ * Ao dar pan e zoom, iteramos na tela e descobrimos qual ponto da matriz desenhar,
+ * mantendo o tamanho do ponto constante na tela.
  */
-private fun DrawScope.drawUrbanBlocks(cx: Float, cy: Float, zoom: Float) {
-    val blockColor = Color(0xFF10191B)
-    val blockBorder = Color(0xFF172528)
+private fun DrawScope.drawDottedWorldMap(panX: Float, panY: Float, zoom: Float) {
+    val dotColor = Color(0xFF162224)
+    val dotRadius = 2.dp.toPx()
+    val dotSpacing = 12.dp.toPx()
+    
+    val mapCols = WORLD_MAP_MATRIX[0].length
+    val mapRows = WORLD_MAP_MATRIX.size
+    
+    // Virtual width of the map based on current zoom
+    val virtualMapWidth = mapCols * dotSpacing * zoom * 0.8f
+    val virtualMapHeight = mapRows * dotSpacing * zoom * 0.8f
+    
+    // Centralizar o mapa na tela inicial
+    val startX = (size.width - virtualMapWidth) / 2f + panX
+    val startY = (size.height - virtualMapHeight) / 2f + panY
 
-    // Grid de quarteirões estilizados
-    val spacing = 70f * zoom
-    val startX = (cx % spacing) - spacing * 2
-    val startY = (cy % spacing) - spacing * 2
-
-    var x = startX
-    while (x < size.width + spacing * 2) {
-        var y = startY
-        while (y < size.height + spacing * 2) {
-            drawRoundRect(
-                color = blockColor,
-                topLeft = Offset(x + 4f * zoom, y + 4f * zoom),
-                size = androidx.compose.ui.geometry.Size(spacing - 8f * zoom, spacing - 8f * zoom),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(6f * zoom, 6f * zoom)
-            )
-            drawRoundRect(
-                color = blockBorder,
-                topLeft = Offset(x + 4f * zoom, y + 4f * zoom),
-                size = androidx.compose.ui.geometry.Size(spacing - 8f * zoom, spacing - 8f * zoom),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(6f * zoom, 6f * zoom),
-                style = Stroke(width = 1f)
-            )
-            y += spacing
+    // Desenhamos apenas uma grade de pontos no espaço da tela
+    var screenY = 0f
+    while (screenY < size.height) {
+        var screenX = 0f
+        while (screenX < size.width) {
+            // Mapeia de (screenX, screenY) para a matriz do mapa
+            val mapX = ((screenX - startX) / (dotSpacing * zoom * 0.8f)).toInt()
+            val mapY = ((screenY - startY) / (dotSpacing * zoom * 0.8f)).toInt()
+            
+            // Se estiver dentro da matriz, verificamos se é terra ('x')
+            if (mapY in 0 until mapRows && mapX in 0 until mapCols) {
+                if (WORLD_MAP_MATRIX[mapY][mapX] == 'x') {
+                    // Desenha o ponto (tamanho constante)
+                    drawCircle(
+                        color = dotColor,
+                        radius = dotRadius,
+                        center = Offset(screenX, screenY)
+                    )
+                }
+            }
+            screenX += dotSpacing
         }
-        x += spacing
+        screenY += dotSpacing
     }
 }
 
-/**
- * Desenha parques e áreas verdes estilizadas (Ibirapuera, Trianon)
- */
-private fun DrawScope.drawUrbanParks(cx: Float, cy: Float, zoom: Float) {
-    val parkFill = Color(0xFF132820)
-    val parkBorder = Color(0xFF1B3D30)
 
-    // Parque do Ibirapuera (grande área ao sul)
-    val ibirapueraCenter = Offset(cx + 40f * zoom, cy + 220f * zoom)
-    drawRoundRect(
-        color = parkFill,
-        topLeft = Offset(ibirapueraCenter.x - 120f * zoom, ibirapueraCenter.y - 70f * zoom),
-        size = androidx.compose.ui.geometry.Size(240f * zoom, 140f * zoom),
-        cornerRadius = androidx.compose.ui.geometry.CornerRadius(30f * zoom, 30f * zoom)
-    )
-    drawRoundRect(
-        color = parkBorder,
-        topLeft = Offset(ibirapueraCenter.x - 120f * zoom, ibirapueraCenter.y - 70f * zoom),
-        size = androidx.compose.ui.geometry.Size(240f * zoom, 140f * zoom),
-        cornerRadius = androidx.compose.ui.geometry.CornerRadius(30f * zoom, 30f * zoom),
-        style = Stroke(width = 1.5f * zoom)
-    )
-
-    // Parque Trianon / Praça dos Ciclistas (próximo à Paulista)
-    val trianonCenter = Offset(cx - 30f * zoom, cy - 20f * zoom)
-    drawRoundRect(
-        color = parkFill,
-        topLeft = Offset(trianonCenter.x - 40f * zoom, trianonCenter.y - 25f * zoom),
-        size = androidx.compose.ui.geometry.Size(80f * zoom, 50f * zoom),
-        cornerRadius = androidx.compose.ui.geometry.CornerRadius(14f * zoom, 14f * zoom)
-    )
-}
-
-/**
- * Desenha o leito do Rio Pinheiros com curva suave
- */
-private fun DrawScope.drawUrbanWaterways(cx: Float, cy: Float, zoom: Float) {
-    val waterBg = Color(0xFF0C2427)
-    val waterCore = Color(0xFF10363B)
-
-    val riverPath = Path().apply {
-        // Rio Pinheiros correndo a oeste
-        val startX = cx - 280f * zoom
-        val startY = cy - 400f * zoom
-        moveTo(startX, startY)
-        cubicTo(
-            cx - 240f * zoom, cy - 100f * zoom,
-            cx - 290f * zoom, cy + 150f * zoom,
-            cx - 220f * zoom, cy + 450f * zoom
-        )
-    }
-
-    drawPath(riverPath, color = waterBg, style = Stroke(width = 32f * zoom, cap = StrokeCap.Round))
-    drawPath(riverPath, color = waterCore, style = Stroke(width = 16f * zoom, cap = StrokeCap.Round))
-}
-
-/**
- * Desenha a malha viária de São Paulo (Av. Paulista, Rebouças, Faria Lima, 23 de Maio, etc.)
- */
-private fun DrawScope.drawUrbanRoadNetwork(cx: Float, cy: Float, zoom: Float) {
-    val arteryColor = Color(0xFF223539)
-    val arteryCenterLine = Color(0xFF2A4247)
-    val secondaryColor = Color(0xFF182629)
-
-    // 1. Ruas Secundárias (Linhas finas)
-    val gridDist = 70f * zoom
-    var rx = (cx % gridDist) - gridDist * 2
-    while (rx < size.width + gridDist * 2) {
-        drawLine(
-            color = secondaryColor,
-            start = Offset(rx, 0f),
-            end = Offset(rx, size.height),
-            strokeWidth = 2.5f * zoom
-        )
-        rx += gridDist
-    }
-
-    var ry = (cy % gridDist) - gridDist * 2
-    while (ry < size.height + gridDist * 2) {
-        drawLine(
-            color = secondaryColor,
-            start = Offset(0f, ry),
-            end = Offset(size.width, ry),
-            strokeWidth = 2.5f * zoom
-        )
-        ry += gridDist
-    }
-
-    // 2. Grandes Artérias de São Paulo (Avenidas Principais)
-
-    // Av. Paulista (diagonal cortando o centro)
-    val paulistaStart = Offset(cx - 300f * zoom, cy + 80f * zoom)
-    val paulistaEnd = Offset(cx + 350f * zoom, cy - 180f * zoom)
-    drawLine(arteryColor, paulistaStart, paulistaEnd, strokeWidth = 14f * zoom, cap = StrokeCap.Round)
-    drawLine(arteryCenterLine, paulistaStart, paulistaEnd, strokeWidth = 3f * zoom, cap = StrokeCap.Round)
-
-    // Av. Faria Lima (artéria financeira)
-    val fariaLimaStart = Offset(cx - 250f * zoom, cy + 280f * zoom)
-    val fariaLimaEnd = Offset(cx - 150f * zoom, cy - 100f * zoom)
-    drawLine(arteryColor, fariaLimaStart, fariaLimaEnd, strokeWidth = 14f * zoom, cap = StrokeCap.Round)
-    drawLine(arteryCenterLine, fariaLimaStart, fariaLimaEnd, strokeWidth = 3f * zoom, cap = StrokeCap.Round)
-
-    // Av. Rebouças (conectando Paulista a Faria Lima / Pinheiros)
-    val reboucasStart = Offset(cx - 100f * zoom, cy)
-    val reboucasEnd = Offset(cx - 200f * zoom, cy + 160f * zoom)
-    drawLine(arteryColor, reboucasStart, reboucasEnd, strokeWidth = 12f * zoom, cap = StrokeCap.Round)
-
-    // Av. 23 de Maio / Corredor Norte-Sul
-    val maioStart = Offset(cx + 120f * zoom, cy - 350f * zoom)
-    val maioEnd = Offset(cx + 90f * zoom, cy + 400f * zoom)
-    drawLine(arteryColor, maioStart, maioEnd, strokeWidth = 12f * zoom, cap = StrokeCap.Round)
-
-    // Marginal Pinheiros (acompanhando o rio)
-    val marginalStart = Offset(cx - 265f * zoom, cy - 380f * zoom)
-    val marginalEnd = Offset(cx - 205f * zoom, cy + 430f * zoom)
-    drawLine(arteryColor, marginalStart, marginalEnd, strokeWidth = 12f * zoom, cap = StrokeCap.Round)
-}
 
 /**
  * Anéis concêntricos de radar de alcance físico (500m, 1.5km, 3km)
