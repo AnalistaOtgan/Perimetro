@@ -12,6 +12,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +44,7 @@ fun CheckInScreen(
     val currentEvent = events.getOrNull(selectedEventIndex) ?: events.firstOrNull()
     var selectedMethod by remember { mutableStateOf(CheckInMethod.QR_DYNAMIC) }
     var showManualFallbackAlert by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Box(
         modifier = Modifier
@@ -277,7 +280,14 @@ fun CheckInScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     ObsidianRatingIconTrigger(
-                                        onClick = { onOpenFeedback(currentEvent) },
+                                        onClick = { 
+                                            val checkInTime = currentEvent.checkInTimestamp ?: 0L
+                                            if (System.currentTimeMillis() - checkInTime >= 30 * 60 * 1000L) {
+                                                onOpenFeedback(currentEvent)
+                                            } else {
+                                                Toast.makeText(context, "Avaliação liberada apenas após 30 minutos de presença no encontro.", Toast.LENGTH_SHORT).show()
+                                            }
+                                        },
                                         size = 56.dp,
                                         iconSize = 28.dp,
                                         isPulsing = true,

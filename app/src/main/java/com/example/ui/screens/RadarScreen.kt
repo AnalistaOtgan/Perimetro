@@ -137,6 +137,7 @@ fun RadarScreen(
             onSelectEvent = { ev ->
                 selectedSonarEvent = ev
                 isRouteActive = true
+                eventForDetails = ev
             },
             isRouteActive = isRouteActive,
             onRecenterRequested = recenterRequested,

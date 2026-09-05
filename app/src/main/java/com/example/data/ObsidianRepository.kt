@@ -216,7 +216,7 @@ class ObsidianRepository {
 
     fun performCheckIn(eventId: String, method: CheckInMethod): Boolean {
         val updated = _events.value.map { ev ->
-            if (ev.id == eventId) ev.copy(isCheckedIn = true, attendeesCount = ev.attendeesCount + 1) else ev
+            if (ev.id == eventId) ev.copy(isCheckedIn = true, checkInTimestamp = System.currentTimeMillis(), attendeesCount = ev.attendeesCount + 1) else ev
         }
         _events.value = updated
 
@@ -289,6 +289,7 @@ class ObsidianRepository {
             visibilityTier = visibility,
             checkInMethod = checkInMethod,
             isCheckedIn = true,
+            checkInTimestamp = System.currentTimeMillis(),
             tags = listOf("Novidade", "Criado por Você"),
             hostName = "${_currentUser.value.name} (Você) • 🛡️",
             hostId = _currentUser.value.id,

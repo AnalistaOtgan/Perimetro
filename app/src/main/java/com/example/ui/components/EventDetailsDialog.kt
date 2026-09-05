@@ -11,6 +11,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,6 +47,7 @@ fun EventDetailsDialog(
 ) {
     val isInsideGeofence = event.distanceKm <= 0.8
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -440,7 +443,14 @@ fun EventDetailsDialog(
 
                         // Avaliar
                         ObsidianRatingIconTrigger(
-                            onClick = onRateClick,
+                            onClick = {
+                                val checkInTime = event.checkInTimestamp ?: 0L
+                                if (System.currentTimeMillis() - checkInTime >= 30 * 60 * 1000L) {
+                                    onRateClick()
+                                } else {
+                                    Toast.makeText(context, "Avaliação liberada apenas após 30 minutos de presença no encontro.", Toast.LENGTH_SHORT).show()
+                                }
+                            },
                             rating = event.ratingAvg,
                             size = 46.dp,
                             iconSize = 25.dp,

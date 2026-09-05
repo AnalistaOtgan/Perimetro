@@ -39,6 +39,7 @@ data class SocialEvent(
     val visibilityTier: VisibilityTier = VisibilityTier.PUBLICO,
     val checkInMethod: CheckInMethod = CheckInMethod.QR_DYNAMIC,
     val isCheckedIn: Boolean = false,
+    val checkInTimestamp: Long? = null,
     val tags: List<String> = listOf("Música", "Ambiente", "Segurança"),
     val hostName: String = "Obsidian Tech Hub • 🛡️",
     val hostId: String = "host_community",
