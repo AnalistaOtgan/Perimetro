@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Group centered with 66dp safe zone -->
+    <group
+        android:pivotX="54"
+        android:pivotY="54">
+
+        <!-- Outer Ring Glow Accent -->
+        <path
+            android:fillColor="#15F9C74F"
+            android:pathData="M54,20 A34,34 0 1,1 53.9,20 Z" />
+
+        <!-- Figure 1: Teal (#00796B) - Top-Left -->
+        <!-- Head -->
+        <path
+            android:fillColor="#00796B"
+            android:pathData="M39,36 A5,5 0 1,1 38.9,36 Z" />
+        <!-- Body / Arm arc curving towards center -->
+        <path
+            android:fillColor="#00796B"
+            android:pathData="M39,43 C33,45 28,52 30,60 C31,64 35,66 38,64 C42,61 43,55 45,51 C48,47 50,46 51,46 C47,44 43,43 39,43 Z" />
+
+        <!-- Figure 2: Burnt Orange (#D87A56) - Top-Right -->
+        <!-- Head -->
+        <path
+            android:fillColor="#D87A56"
+            android:pathData="M69,36 A5,5 0 1,1 68.9,36 Z" />
+        <!-- Body / Arm arc -->
+        <path
+            android:fillColor="#D87A56"
+            android:pathData="M69,43 C73,43 77,44 80,47 C82,53 80,61 74,65 C70,68 66,66 65,62 C64,57 66,52 64,48 C61,44 57,44 57,44 C61,43 65,43 69,43 Z" />
+
+        <!-- Figure 3: Mustard Yellow (#F9C74F) - Bottom -->
+        <!-- Head -->
+        <path
+            android:fillColor="#F9C74F"
+            android:pathData="M54,77 A5,5 0 1,1 53.9,77 Z" />
+        <!-- Body / Arm arc connecting left and right -->
+        <path
+            android:fillColor="#F9C74F"
+            android:pathData="M54,70 C48,70 42,67 38,62 C40,58 45,58 50,60 C53,61 55,61 58,60 C63,58 68,58 70,62 C66,67 60,70 54,70 Z" />
+
+        <!-- Central Gleaming Star (#FFFFFF) representing the Spark of Presence -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M54,48 L56,52 L60,54 L56,56 L54,60 L52,56 L48,54 L52,52 Z" />
+
+    </group>
+</vector>

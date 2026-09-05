@@ -1,0 +1,6 @@
+{
+  "name": "Obsidian",
+  "description": "A Rede Social da Presença Real baseada em Proof of Presence, radar de eventos e selos de conexão física.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
