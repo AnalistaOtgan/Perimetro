@@ -17,8 +17,11 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.ObsidianRepository
+import com.example.location.DefaultLocationTracker
+import com.example.location.UserLocation
 import com.example.model.*
 import com.example.ui.components.ObsidianEventsNexusIcon
 import com.example.ui.components.ObsidianStationPortalIcon
@@ -63,6 +66,20 @@ fun ObsidianApp(repository: ObsidianRepository) {
     val events by repository.events.collectAsStateWithLifecycle()
     val badges by repository.badges.collectAsStateWithLifecycle()
     val connections by repository.connections.collectAsStateWithLifecycle()
+    val userLocation by repository.userLocation.collectAsStateWithLifecycle()
+
+    val context = LocalContext.current
+    val locationTracker = remember { DefaultLocationTracker(context.applicationContext) }
+    var isTrackingActive by remember { mutableStateOf(false) }
+
+    // Rastreamento contínuo via GPS
+    LaunchedEffect(isTrackingActive) {
+        if (isTrackingActive && locationTracker.hasLocationPermission()) {
+            locationTracker.getLocationUpdates(3000L).collect { loc ->
+                repository.updateUserLocation(loc)
+            }
+        }
+    }
 
     var isCreatingEvent by remember { mutableStateOf(false) }
     var eventForFeedback by remember { mutableStateOf<SocialEvent?>(null) }
@@ -214,6 +231,7 @@ fun ObsidianApp(repository: ObsidianRepository) {
                             events = events,
                             currentUserTier = user.tier,
                             currentUser = user,
+                            userLocation = userLocation,
                             onSelectEvent = { ev ->
                                 currentDest = NavigationDest.CHECKIN
                             },
@@ -224,6 +242,15 @@ fun ObsidianApp(repository: ObsidianRepository) {
                             onCreateEventClick = { isCreatingEvent = true },
                             onNavigateToEvents = {
                                 currentDest = NavigationDest.EVENTS
+                            },
+                            onRequestStartLocationUpdates = {
+                                isTrackingActive = true
+                                coroutineScope.launch {
+                                    val currentLoc = locationTracker.getCurrentLocation()
+                                    if (currentLoc != null) {
+                                        repository.updateUserLocation(currentLoc)
+                                    }
+                                }
                             }
                         )
                     }
@@ -259,6 +286,7 @@ fun ObsidianApp(repository: ObsidianRepository) {
                     NavigationDest.CHECKIN -> {
                         CheckInScreen(
                             events = events,
+                            userLocation = userLocation,
                             onPerformCheckIn = { ev, method ->
                                 repository.performCheckIn(ev.id, method)
                             },

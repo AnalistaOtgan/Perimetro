@@ -1,6 +1,12 @@
 package com.example.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import com.example.location.UserLocation
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -69,12 +75,48 @@ fun RadarScreen(
     events: List<SocialEvent>,
     currentUserTier: UserTier = UserTier.PRATA,
     currentUser: UserProfile? = null,
+    userLocation: UserLocation? = null,
     onSelectEvent: (SocialEvent) -> Unit = {},
     onCheckInClick: (SocialEvent) -> Unit = {},
     onCreateEventClick: () -> Unit = {},
-    onNavigateToEvents: () -> Unit = {}
+    onNavigateToEvents: () -> Unit = {},
+    onRequestStartLocationUpdates: () -> Unit = {}
 ) {
     val context = LocalContext.current
+
+    // Gerenciador de permissões de GPS em tempo de execução
+    val locationPermissions = arrayOf(
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION
+    )
+    var hasLocationPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { perms ->
+        val fineGranted = perms[Manifest.permission.ACCESS_FINE_LOCATION] == true
+        val coarseGranted = perms[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        hasLocationPermission = fineGranted || coarseGranted
+        if (hasLocationPermission) {
+            onRequestStartLocationUpdates()
+            Toast.makeText(context, "GPS de alta precisão ativado!", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "Permissão de GPS necessária para localização em tempo real", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (!hasLocationPermission) {
+            permissionLauncher.launch(locationPermissions)
+        } else {
+            onRequestStartLocationUpdates()
+        }
+    }
+
     var selectedSonarEvent by remember { mutableStateOf(events.firstOrNull()) }
     var eventForDetails by remember { mutableStateOf<SocialEvent?>(null) }
     var eventForRouteGuidance by remember { mutableStateOf<SocialEvent?>(null) }
@@ -140,6 +182,7 @@ fun RadarScreen(
                 isRouteActive = true
                 eventForDetails = ev
             },
+            userLocation = userLocation,
             isRouteActive = isRouteActive,
             onRecenterRequested = recenterRequested,
             onResetRecenter = { recenterRequested = false },
@@ -182,18 +225,38 @@ fun RadarScreen(
                                 color = ColorDarkObsidian,
                                 letterSpacing = (-0.3).sp
                             )
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.clickable {
+                                    if (!hasLocationPermission) {
+                                        permissionLauncher.launch(locationPermissions)
+                                    } else {
+                                        recenterRequested = true
+                                    }
+                                }
+                            ) {
                                 Box(
                                     modifier = Modifier
                                         .size(6.dp)
-                                        .background(ColorTeal.copy(alpha = gpsPulseAlpha), CircleShape)
+                                        .background(
+                                            if (hasLocationPermission) ColorTeal.copy(alpha = gpsPulseAlpha) else ColorBurntOrange,
+                                            CircleShape
+                                        )
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "São Paulo, SP • Ao vivo agora",
+                                    text = if (hasLocationPermission && userLocation != null) {
+                                        "GPS • ${userLocation.formattedAccuracy} (${userLocation.formattedCoordinates})"
+                                    } else if (hasLocationPermission) {
+                                        "Sincronizando satélites GPS..."
+                                    } else {
+                                        "Habilitar GPS de Alta Precisão"
+                                    },
                                     fontSize = 10.5.sp,
-                                    color = ColorTeal,
-                                    fontWeight = FontWeight.SemiBold
+                                    color = if (hasLocationPermission) ColorTeal else ColorBurntOrange,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -333,21 +396,29 @@ fun RadarScreen(
             Surface(
                 shape = CircleShape,
                 color = BgSurface.copy(alpha = 0.95f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    if (hasLocationPermission) BorderWarm else ColorBurntOrange
+                ),
                 shadowElevation = 8.dp,
                 modifier = Modifier
                     .size(46.dp)
                     .clickable {
-                        recenterRequested = true
-                        Toast.makeText(context, "GPS centralizado na sua localização", Toast.LENGTH_SHORT).show()
+                        if (!hasLocationPermission) {
+                            permissionLauncher.launch(locationPermissions)
+                        } else {
+                            recenterRequested = true
+                            val locStr = userLocation?.let { " (${it.formattedCoordinates})" } ?: ""
+                            Toast.makeText(context, "GPS centralizado na sua localização$locStr", Toast.LENGTH_SHORT).show()
+                        }
                     }
                     .testTag("recenter_gps_btn")
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        imageVector = Icons.Default.MyLocation,
+                        imageVector = if (hasLocationPermission) Icons.Default.MyLocation else Icons.Default.LocationDisabled,
                         contentDescription = "Centralizar no meu local",
-                        tint = ColorTeal,
+                        tint = if (hasLocationPermission) ColorTeal else ColorBurntOrange,
                         modifier = Modifier.size(22.dp)
                     )
                 }

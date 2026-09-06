@@ -1,5 +1,7 @@
 package com.example.data
 
+import com.example.location.LocationUtils
+import com.example.location.UserLocation
 import com.example.model.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +30,24 @@ class ObsidianRepository {
 
     fun updateUserProfile(profile: UserProfile) {
         _currentUser.value = profile
+    }
+
+    private val _userLocation = MutableStateFlow<UserLocation?>(null)
+    val userLocation: StateFlow<UserLocation?> = _userLocation.asStateFlow()
+
+    fun updateUserLocation(location: UserLocation) {
+        _userLocation.value = location
+        // Recalcular distância física real de todos os encontros
+        val updated = _events.value.map { ev ->
+            val distKm = LocationUtils.calculateDistanceKm(
+                location.latitude,
+                location.longitude,
+                ev.latitude,
+                ev.longitude
+            )
+            ev.copy(distanceKm = distKm)
+        }
+        _events.value = updated
     }
 
     private val _events = MutableStateFlow<List<SocialEvent>>(
@@ -275,16 +295,27 @@ class ObsidianRepository {
         locationName: String,
         visibility: VisibilityTier,
         checkInMethod: CheckInMethod,
-        mediaReel: List<String> = emptyList()
+        mediaReel: List<String> = emptyList(),
+        latitude: Double? = null,
+        longitude: Double? = null
     ) {
         val sdf = SimpleDateFormat("dd/MM", Locale.getDefault())
+        val userLoc = _userLocation.value
+        val evLat = latitude ?: userLoc?.latitude ?: UserLocation.DEFAULT_SP_LAT
+        val evLon = longitude ?: userLoc?.longitude ?: UserLocation.DEFAULT_SP_LON
+        val distKm = if (userLoc != null) {
+            LocationUtils.calculateDistanceKm(userLoc.latitude, userLoc.longitude, evLat, evLon)
+        } else {
+            0.1
+        }
+
         val newEv = SocialEvent(
             id = "ev_${System.currentTimeMillis()}",
             title = title,
             description = description,
             category = category,
             locationName = locationName,
-            distanceKm = 0.1,
+            distanceKm = distKm,
             dateDisplay = sdf.format(Date()),
             timeDisplay = "Em breve",
             attendeesCount = 1,
@@ -298,7 +329,9 @@ class ObsidianRepository {
             hostName = "${_currentUser.value.name} (Você)",
             hostId = _currentUser.value.id,
             isUserHost = true,
-            mediaReel = mediaReel
+            mediaReel = mediaReel,
+            latitude = evLat,
+            longitude = evLon
         )
         _events.value = listOf(newEv) + _events.value
     }

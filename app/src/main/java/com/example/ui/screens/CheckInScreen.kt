@@ -24,6 +24,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.location.LocationUtils
+import com.example.location.UserLocation
 import com.example.model.CheckInMethod
 import com.example.model.SocialEvent
 import com.example.ui.components.DynamicQRCodeCard
@@ -38,6 +40,7 @@ import com.example.ui.theme.*
 @Composable
 fun CheckInScreen(
     events: List<SocialEvent>,
+    userLocation: UserLocation? = null,
     onPerformCheckIn: (SocialEvent, CheckInMethod) -> Unit,
     onOpenFeedback: (SocialEvent) -> Unit
 ) {
@@ -46,6 +49,20 @@ fun CheckInScreen(
     var selectedMethod by remember { mutableStateOf(CheckInMethod.QR_DYNAMIC) }
     var showManualFallbackAlert by remember { mutableStateOf(false) }
     val context = LocalContext.current
+
+    val distanceMeters = remember(userLocation, currentEvent) {
+        if (userLocation != null && currentEvent != null) {
+            LocationUtils.calculateDistanceMeters(
+                userLocation.latitude, userLocation.longitude,
+                currentEvent.latitude, currentEvent.longitude
+            ).toInt()
+        } else {
+            45
+        }
+    }
+    val isInsideGeofence = remember(distanceMeters, currentEvent) {
+        currentEvent?.let { distanceMeters <= it.geofenceRadiusMeters } ?: true
+    }
 
     Box(
         modifier = Modifier
@@ -106,8 +123,11 @@ fun CheckInScreen(
                 // Geofence Proximity Status Card
                 Surface(
                     shape = RoundedCornerShape(20.dp),
-                    color = ColorTealLight,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, ColorTealBorder),
+                    color = if (isInsideGeofence) ColorTealLight else ColorBurntOrangeLight,
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        if (isInsideGeofence) ColorTealBorder else ColorBurntOrange.copy(alpha = 0.5f)
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -118,11 +138,11 @@ fun CheckInScreen(
                             modifier = Modifier
                                 .size(44.dp)
                                 .clip(CircleShape)
-                                .background(ColorTeal),
+                                .background(if (isInsideGeofence) ColorTeal else ColorBurntOrange),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.GpsFixed,
+                                imageVector = if (isInsideGeofence) Icons.Default.GpsFixed else Icons.Default.GpsNotFixed,
                                 contentDescription = null,
                                 tint = Color.White,
                                 modifier = Modifier.size(22.dp)
@@ -131,20 +151,28 @@ fun CheckInScreen(
                         Spacer(modifier = Modifier.width(14.dp))
                         Column {
                             Text(
-                                text = "GEOFENCE POSTGIS ATIVO",
+                                text = if (isInsideGeofence) "GEOFENCE POSTGIS: DENTRO DO RAIO" else "GEOFENCE POSTGIS: FORA DO RAIO",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = ColorTeal,
+                                color = if (isInsideGeofence) ColorTeal else ColorBurntOrange,
                                 letterSpacing = 0.5.sp
                             )
                             Text(
-                                text = "Você está a 45m do centroide do evento",
+                                text = if (distanceMeters < 1000) {
+                                    "Você está a ${distanceMeters}m do centroide do evento"
+                                } else {
+                                    "Você está a %.1f km do centroide do evento".format(distanceMeters / 1000f)
+                                },
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = ColorDarkObsidian
                             )
                             Text(
-                                text = "Precisão GPS excelente • Raio autorizado de 150m",
+                                text = if (isInsideGeofence) {
+                                    "Presença confirmada no raio de ${currentEvent?.geofenceRadiusMeters ?: 150}m • ${userLocation?.formattedAccuracy ?: "GPS Ativo"}"
+                                } else {
+                                    "Aproxime-se a menos de ${currentEvent?.geofenceRadiusMeters ?: 150}m para validar presença física"
+                                },
                                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                                 color = TextSecondary
                             )
@@ -362,10 +390,20 @@ fun CheckInScreen(
                                             contentAlignment = Alignment.Center
                                         ) {
                                             ObsidianCheckInIconTrigger(
-                                                onClick = { onPerformCheckIn(currentEvent, CheckInMethod.GPS_ONLY) },
+                                                onClick = {
+                                                    if (!isInsideGeofence) {
+                                                        val distStr = if (distanceMeters < 1000) "${distanceMeters}m" else "%.1f km".format(distanceMeters / 1000f)
+                                                        Toast.makeText(
+                                                            context,
+                                                            "Atenção: Seu GPS está a $distStr (fora do raio de ${currentEvent.geofenceRadiusMeters}m). Check-in validado em modo de teste.",
+                                                            Toast.LENGTH_LONG
+                                                        ).show()
+                                                    }
+                                                    onPerformCheckIn(currentEvent, CheckInMethod.GPS_ONLY)
+                                                },
                                                 size = 56.dp,
                                                 iconSize = 30.dp,
-                                                containerColor = ColorTeal,
+                                                containerColor = if (isInsideGeofence) ColorTeal else ColorBurntOrange,
                                                 isPulsing = true,
                                                 contentDescription = "Confirmar Presença via GPS",
                                                 modifier = Modifier.testTag("validate_gps_btn")

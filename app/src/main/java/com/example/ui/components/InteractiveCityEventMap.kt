@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.location.UserLocation
 import com.example.model.EventCategory
 import com.example.model.SocialEvent
 import com.example.ui.theme.*
@@ -63,12 +64,16 @@ fun InteractiveCityEventMap(
     selectedEvent: SocialEvent?,
     onSelectEvent: (SocialEvent) -> Unit,
     modifier: Modifier = Modifier,
+    userLocation: UserLocation? = null,
     isRouteActive: Boolean = false,
     onRecenterRequested: Boolean = false,
     onResetRecenter: () -> Unit = {}
 ) {
     val density = LocalDensity.current
     val coroutineScope = rememberCoroutineScope()
+
+    val currentLat = userLocation?.latitude ?: USER_DEFAULT_LAT
+    val currentLon = userLocation?.longitude ?: USER_DEFAULT_LON
 
     // Estado de navegação e câmera do mapa
     var panX by remember { mutableFloatStateOf(0f) }
@@ -119,8 +124,8 @@ fun InteractiveCityEventMap(
     // Centralizar no evento selecionado quando houver mudança externa (ex: swipe no carrossel)
     LaunchedEffect(selectedEvent?.id) {
         selectedEvent?.let { ev ->
-            val deltaX = ((ev.longitude - USER_DEFAULT_LON) * GEO_SCALE_FACTOR).toFloat()
-            val deltaY = ((USER_DEFAULT_LAT - ev.latitude) * GEO_SCALE_FACTOR).toFloat()
+            val deltaX = ((ev.longitude - currentLon) * GEO_SCALE_FACTOR).toFloat()
+            val deltaY = ((currentLat - ev.latitude) * GEO_SCALE_FACTOR).toFloat()
             // Ajustar o pan para centralizar o evento (com ligeiro deslocamento para cima para dar espaço ao bottom sheet)
             val targetPanX = -deltaX * zoomScale
             val targetPanY = -deltaY * zoomScale - 80f
@@ -162,8 +167,8 @@ fun InteractiveCityEventMap(
 
         // Posição na tela do evento selecionado (para rota)
         val selectedEventScreenPos = selectedEvent?.let { ev ->
-            val evRelX = ((ev.longitude - USER_DEFAULT_LON) * GEO_SCALE_FACTOR).toFloat()
-            val evRelY = ((USER_DEFAULT_LAT - ev.latitude) * GEO_SCALE_FACTOR).toFloat()
+            val evRelX = ((ev.longitude - currentLon) * GEO_SCALE_FACTOR).toFloat()
+            val evRelY = ((currentLat - ev.latitude) * GEO_SCALE_FACTOR).toFloat()
             Offset(
                 x = centerX + evRelX * zoomScale,
                 y = centerY + evRelY * zoomScale
@@ -187,18 +192,21 @@ fun InteractiveCityEventMap(
                 )
             }
 
-            // G. Beacon de Localização do Usuário (GPS com Halo pulsante)
+            // G. Beacon de Localização do Usuário (GPS com Halo pulsante, precisão e bússola)
             drawUserGpsBeacon(
                 x = userScreenX,
                 y = userScreenY,
-                pulseProgress = gpsPulseProgress
+                pulseProgress = gpsPulseProgress,
+                bearing = userLocation?.bearing,
+                accuracyMeters = userLocation?.accuracyMeters,
+                zoomScale = zoomScale
             )
         }
 
         // 2. CAMADA DE MARCADORES (PINS) INTERATIVOS DOS ENCONTROS
         events.forEach { event ->
-            val evRelX = ((event.longitude - USER_DEFAULT_LON) * GEO_SCALE_FACTOR).toFloat()
-            val evRelY = ((USER_DEFAULT_LAT - event.latitude) * GEO_SCALE_FACTOR).toFloat()
+            val evRelX = ((event.longitude - currentLon) * GEO_SCALE_FACTOR).toFloat()
+            val evRelY = ((currentLat - event.latitude) * GEO_SCALE_FACTOR).toFloat()
             val screenX = centerX + evRelX * zoomScale
             val screenY = centerY + evRelY * zoomScale
 
@@ -575,10 +583,39 @@ private fun DrawScope.drawUberStyleRoute(
 }
 
 /**
- * Beacon de Localização do Usuário (GPS) com Pulso Halo
+ * Beacon de Localização do Usuário (GPS) com Pulso Halo, Círculo de Precisão e Bússola
  */
-private fun DrawScope.drawUserGpsBeacon(x: Float, y: Float, pulseProgress: Float) {
+private fun DrawScope.drawUserGpsBeacon(
+    x: Float,
+    y: Float,
+    pulseProgress: Float,
+    bearing: Float? = null,
+    accuracyMeters: Float? = null,
+    zoomScale: Float = 1.0f
+) {
     val center = Offset(x, y)
+
+    // 0. Círculo de Acurácia do GPS (área de incerteza em escala métrica proporcional)
+    accuracyMeters?.let { accMeters ->
+        val pixelRadius = (accMeters * (GEO_SCALE_FACTOR / 111320.0) * zoomScale)
+            .toFloat()
+            .coerceIn(16f, 220f)
+
+        drawCircle(
+            color = ColorTeal.copy(alpha = 0.08f),
+            center = center,
+            radius = pixelRadius
+        )
+        drawCircle(
+            color = ColorTeal.copy(alpha = 0.35f),
+            center = center,
+            radius = pixelRadius,
+            style = Stroke(
+                width = 1.5f,
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f), 0f)
+            )
+        )
+    }
 
     // 1. Halo Pulsante Expansivo (Radar de Presença Ativa)
     val maxPulseRadius = 46f
@@ -591,8 +628,8 @@ private fun DrawScope.drawUserGpsBeacon(x: Float, y: Float, pulseProgress: Float
         radius = currentPulseRadius
     )
 
-    // 2. Cone Direcional (Indicador de Orientação / Heading)
-    val headingAngle = -45.0 // apontando levemente para nordeste (Av. Paulista)
+    // 2. Cone Direcional (Indicador de Orientação / Heading real do GPS ou Sensores)
+    val headingAngle = bearing?.toDouble()?.minus(90.0) ?: -45.0
     val headingRad = Math.toRadians(headingAngle)
     val coneDistance = 24f
     val coneSpread = Math.toRadians(28.0)
