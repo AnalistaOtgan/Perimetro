@@ -231,256 +231,208 @@ fun ManageEventMediaDialog(
         "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&q=80"
     )
 
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(24.dp),
-            color = BgSurface,
-            border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm),
-            shadowElevation = 10.dp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+    ObsidianModalDialog(
+        onDismissRequest = onDismiss,
+        title = "Carretel de Mídia",
+        subtitle = event.title,
+        icon = Icons.Default.Collections,
+        iconTint = ColorBurntOrange,
+        iconBgColor = ColorBurntOrangeLight,
+        headerAccentGradient = listOf(ColorBurntOrange, ColorMustard, ColorTeal),
+        wrapHeight = true,
+        buttons = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = ColorBurntOrange),
+                shape = RoundedCornerShape(9999.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
             ) {
-                // Top Header do Diálogo
+                Text(text = "Concluído", fontWeight = FontWeight.Bold, color = Color.White)
+            }
+        }
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // BOTÕES DE AÇÃO: ESCOLHER DA GALERIA (Photo Picker) OU AMOSTRA RÁPIDA
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Button(
+                    onClick = {
+                        photoPickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ColorDarkObsidian,
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .testTag("open_photo_picker_btn")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AddPhotoAlternate,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = ColorBurntOrange
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Selecionar Fotos da Galeria",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                }
+
+                // Opção de adicionar fotos de demonstração com um toque
+                OutlinedButton(
+                    onClick = {
+                        val nextSample = samplePresetPhotos.firstOrNull { it !in event.mediaReel }
+                            ?: samplePresetPhotos.random()
+                        onAddMedia(listOf(nextSample))
+                    },
+                    shape = RoundedCornerShape(14.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, ColorTeal),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = ColorTeal),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(42.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Adicionar Foto de Amostra em Alta Resolução",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+
+            // LISTA DAS FOTOS ATUAIS DO CARRETEL COM OPÇÃO DE EXCLUIR
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Text(
-                                text = "Carretel de Mídia",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Black,
-                                color = ColorDarkObsidian
-                            )
-                            Surface(
-                                shape = RoundedCornerShape(9999.dp),
-                                color = ColorBurntOrange.copy(alpha = 0.15f)
-                            ) {
-                                Text(
-                                    text = "Dono",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = ColorBurntOrange,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                                )
-                            }
-                        }
-                        Text(
-                            text = event.title,
-                            fontSize = 12.5.sp,
-                            color = TextSecondary,
-                            maxLines = 1
-                        )
-                    }
-
-                    IconButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.size(32.dp)
+                    Text(
+                        text = "Fotos no Carretel:",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = ColorDarkObsidian
+                    )
+                    Surface(
+                        shape = RoundedCornerShape(9999.dp),
+                        color = ColorBurntOrangeLight
                     ) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = "Fechar",
-                            tint = ColorDarkObsidian
-                        )
-                    }
-                }
-
-                Divider(color = BorderWarm, thickness = 0.8.dp)
-
-                // BOTÕES DE AÇÃO: ESCOLHER DA GALERIA (Photo Picker) OU AMOSTRA RÁPIDA
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Button(
-                        onClick = {
-                            photoPickerLauncher.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                            )
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = ColorBurntOrange,
-                            contentColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .shadow(3.dp, RoundedCornerShape(14.dp), spotColor = Color(0x47D87A56))
-                            .testTag("open_photo_picker_btn")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AddPhotoAlternate,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Selecionar Fotos da Galeria",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
-                        )
-                    }
-
-                    // Opção de adicionar fotos de demonstração com um toque
-                    OutlinedButton(
-                        onClick = {
-                            val nextSample = samplePresetPhotos.firstOrNull { it !in event.mediaReel }
-                                ?: samplePresetPhotos.random()
-                            onAddMedia(listOf(nextSample))
-                        },
-                        shape = RoundedCornerShape(14.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, ColorTeal),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = ColorTeal),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(42.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AutoAwesome,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "Adicionar Foto de Amostra em Alta Resolução",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                }
-
-                // LISTA DAS FOTOS ATUAIS DO CARRETEL COM OPÇÃO DE EXCLUIR
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Fotos no Carretel:",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = ColorDarkObsidian
-                        )
                         Text(
                             text = "${event.mediaReel.size} mídias",
-                            fontSize = 12.sp,
-                            color = TextSecondary
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = ColorBurntOrange,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                         )
                     }
+                }
 
-                    if (event.mediaReel.isEmpty()) {
-                        Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = BgSecondary,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm),
-                            modifier = Modifier.fillMaxWidth()
+                if (event.mediaReel.isEmpty()) {
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = BgSecondary,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Column(
-                                modifier = Modifier.padding(24.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.PhotoLibrary,
-                                    contentDescription = null,
-                                    tint = TextMuted,
-                                    modifier = Modifier.size(32.dp)
-                                )
-                                Text(
-                                    text = "Nenhuma foto no carretel ainda",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = TextSecondary
-                                )
-                                Text(
-                                    text = "Suba fotos para destacar seu encontro no Radar.",
-                                    fontSize = 11.5.sp,
-                                    color = TextMuted
-                                )
-                            }
+                            Icon(
+                                imageVector = Icons.Default.PhotoLibrary,
+                                contentDescription = null,
+                                tint = TextMuted,
+                                modifier = Modifier.size(32.dp)
+                            )
+                            Text(
+                                text = "Nenhuma foto no carretel ainda",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = TextSecondary
+                            )
+                            Text(
+                                text = "Suba fotos para destacar seu encontro no Radar.",
+                                fontSize = 11.5.sp,
+                                color = TextMuted
+                            )
                         }
-                    } else {
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            itemsIndexed(event.mediaReel) { index, url ->
-                                Box(
+                    }
+                } else {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        itemsIndexed(event.mediaReel) { index, url ->
+                            Box(
+                                modifier = Modifier
+                                    .size(90.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .border(1.dp, BorderWarm, RoundedCornerShape(12.dp))
+                            ) {
+                                AsyncImage(
+                                    model = url,
+                                    contentDescription = "Foto $index",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+
+                                // Botão Excluir Foto
+                                Surface(
+                                    onClick = { onRemoveMedia(url) },
+                                    shape = CircleShape,
+                                    color = Color.Black.copy(alpha = 0.7f),
                                     modifier = Modifier
-                                        .size(90.dp)
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .border(1.dp, BorderWarm, RoundedCornerShape(12.dp))
+                                        .align(Alignment.TopEnd)
+                                        .padding(4.dp)
+                                        .size(24.dp)
                                 ) {
-                                    AsyncImage(
-                                        model = url,
-                                        contentDescription = "Foto $index",
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier.fillMaxSize()
-                                    )
-
-                                    // Botão Excluir Foto
-                                    Surface(
-                                        onClick = { onRemoveMedia(url) },
-                                        shape = CircleShape,
-                                        color = Color.Black.copy(alpha = 0.7f),
-                                        modifier = Modifier
-                                            .align(Alignment.TopEnd)
-                                            .padding(4.dp)
-                                            .size(24.dp)
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Icon(
-                                                imageVector = Icons.Default.Delete,
-                                                contentDescription = "Remover foto",
-                                                tint = Color.White,
-                                                modifier = Modifier.size(14.dp)
-                                            )
-                                        }
-                                    }
-
-                                    // Indicador de número
-                                    Surface(
-                                        shape = RoundedCornerShape(4.dp),
-                                        color = Color.Black.copy(alpha = 0.6f),
-                                        modifier = Modifier
-                                            .align(Alignment.BottomStart)
-                                            .padding(4.dp)
-                                    ) {
-                                        Text(
-                                            text = "#${index + 1}",
-                                            color = Color.White,
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Remover foto",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(14.dp)
                                         )
                                     }
+                                }
+
+                                // Indicador de número
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = Color.Black.copy(alpha = 0.6f),
+                                    modifier = Modifier
+                                        .align(Alignment.BottomStart)
+                                        .padding(4.dp)
+                                ) {
+                                    Text(
+                                        text = "#${index + 1}",
+                                        color = Color.White,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                    )
                                 }
                             }
                         }
                     }
-                }
-
-                // Rodapé com botão Concluído
-                Button(
-                    onClick = onDismiss,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = BgSecondary,
-                        contentColor = ColorDarkObsidian
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(text = "Concluído", fontWeight = FontWeight.Bold)
                 }
             }
         }

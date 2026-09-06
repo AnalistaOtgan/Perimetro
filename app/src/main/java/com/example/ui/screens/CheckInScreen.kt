@@ -28,6 +28,7 @@ import com.example.model.CheckInMethod
 import com.example.model.SocialEvent
 import com.example.ui.components.DynamicQRCodeCard
 import com.example.ui.components.ObsidianCheckInIconTrigger
+import com.example.ui.components.ObsidianModalDialog
 import com.example.ui.components.ObsidianPrismRatingIcon
 import com.example.ui.components.ObsidianRatingIconTrigger
 import com.example.ui.components.OrganicCirclesBackground
@@ -442,33 +443,143 @@ fun CheckInScreen(
                 }
 
                 if (showManualFallbackAlert && currentEvent != null) {
-                    AlertDialog(
+                    ObsidianModalDialog(
                         onDismissRequest = { showManualFallbackAlert = false },
-                        title = { Text("Validação Manual de Recepção", fontWeight = FontWeight.Bold, color = ColorDarkObsidian) },
-                        text = {
-                            Text(
-                                text = "O staff do evento pode atestar manualmente sua entrada física caso a leitura apresente instabilidade técnica. Confirmar?",
-                                color = TextSecondary
-                            )
-                        },
-                        confirmButton = {
+                        title = "Validação Manual de Entrada",
+                        subtitle = currentEvent.title,
+                        icon = Icons.Default.AdminPanelSettings,
+                        iconTint = ColorBurntOrange,
+                        iconBgColor = ColorBurntOrangeLight,
+                        headerAccentGradient = listOf(ColorBurntOrange, ColorMustard, ColorTeal),
+                        wrapHeight = true,
+                        buttons = {
+                            OutlinedButton(
+                                onClick = { showManualFallbackAlert = false },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp),
+                                shape = RoundedCornerShape(9999.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary)
+                            ) {
+                                Text("Cancelar", fontWeight = FontWeight.SemiBold)
+                            }
+
                             Button(
                                 onClick = {
                                     onPerformCheckIn(currentEvent, CheckInMethod.GPS_ONLY)
                                     showManualFallbackAlert = false
                                 },
+                                modifier = Modifier
+                                    .weight(1.3f)
+                                    .height(48.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = ColorBurntOrange),
-                                shape = RoundedCornerShape(9999.dp)
+                                shape = RoundedCornerShape(9999.dp),
+                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
                             ) {
-                                Text("Atestar Presença", fontWeight = FontWeight.Bold)
-                            }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = { showManualFallbackAlert = false }) {
-                                Text("Cancelar", color = TextSecondary)
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Atestar Presença", fontWeight = FontWeight.Bold, color = Color.White)
                             }
                         }
-                    )
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = BgSecondary,
+                                border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .background(ColorTealLight, CircleShape),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.SupportAgent,
+                                            contentDescription = null,
+                                            tint = ColorTeal,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                    Text(
+                                        text = "O staff autorizado do evento pode atestar manualmente sua entrada física caso a leitura por QR Code ou câmera apresente instabilidade técnica.",
+                                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, lineHeight = 16.sp),
+                                        color = TextSecondary
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = BgSecondary,
+                                border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.LocationOn,
+                                        contentDescription = null,
+                                        tint = ColorBurntOrange,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column {
+                                        Text(
+                                            text = currentEvent.locationName,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = ColorDarkObsidian
+                                        )
+                                        Text(
+                                            text = "Validação cruzada com coordenadas geográficas do local",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.5.sp),
+                                            color = TextMuted
+                                        )
+                                    }
+                                }
+                            }
+
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = ColorTealLight
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Security,
+                                        contentDescription = null,
+                                        tint = ColorTeal,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Text(
+                                        text = "Protocolo de contingência auditado • Salvo em histórico com timestamp",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.5.sp),
+                                        color = ColorTeal,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

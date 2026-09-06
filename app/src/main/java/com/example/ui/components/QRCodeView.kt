@@ -22,9 +22,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.DarkObsidian
-import com.example.ui.theme.ObsidianBurntOrange
-import com.example.ui.theme.ObsidianTeal
+import com.example.ui.theme.*
 import kotlinx.coroutines.delay
 
 @Composable
@@ -57,14 +55,14 @@ fun DynamicQRCodeCard(
         modifier = modifier
             .fillMaxWidth()
             .testTag("dynamic_qr_card"),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 4.dp,
-        shadowElevation = 8.dp
+        shape = RoundedCornerShape(22.dp),
+        color = BgSecondary,
+        border = androidx.compose.foundation.BorderStroke(1.2.dp, BorderWarm),
+        shadowElevation = 4.dp
     ) {
         Column(
             modifier = Modifier
-                .padding(24.dp)
+                .padding(20.dp)
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -78,14 +76,14 @@ fun DynamicQRCodeCard(
                         modifier = Modifier
                             .size(10.dp)
                             .clip(RoundedCornerShape(5.dp))
-                            .background(ObsidianTeal)
+                            .background(ColorTeal)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Proof of Presence",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
-                        color = ObsidianTeal
+                        color = ColorTeal
                     )
                 }
 
@@ -93,8 +91,8 @@ fun DynamicQRCodeCard(
                     CircularProgressIndicator(
                         progress = { secondsLeft / 15f },
                         modifier = Modifier.size(20.dp),
-                        color = if (secondsLeft <= 3) ObsidianBurntOrange else ObsidianTeal,
-                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                        color = if (secondsLeft <= 3) ColorBurntOrange else ColorTeal,
+                        trackColor = BorderWarm,
                         strokeWidth = 2.5.dp
                     )
                     Spacer(modifier = Modifier.width(6.dp))
@@ -102,21 +100,21 @@ fun DynamicQRCodeCard(
                         text = "${secondsLeft}s",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = if (secondsLeft <= 3) ObsidianBurntOrange else MaterialTheme.colorScheme.onSurface
+                        color = if (secondsLeft <= 3) ColorBurntOrange else ColorDarkObsidian
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // QR Code Matrix Box
             Box(
                 modifier = Modifier
-                    .size(200.dp)
+                    .size(190.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(Color.White)
-                    .border(2.dp, MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(16.dp))
-                    .padding(16.dp),
+                    .border(1.5.dp, BorderWarm, RoundedCornerShape(16.dp))
+                    .padding(14.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
@@ -177,20 +175,27 @@ fun DynamicQRCodeCard(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            Text(
-                text = hashDisplay,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = BgSurface,
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm)
+            ) {
+                Text(
+                    text = hashDisplay,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                    color = ColorDarkObsidian
+                )
+            }
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             Text(
                 text = "QR Code Dinâmico • Anti-Screenshot",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = TextSecondary
             )
         }
     }

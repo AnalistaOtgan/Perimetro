@@ -24,6 +24,7 @@ import com.example.model.UserProfile
 import com.example.model.UserTier
 import com.example.model.getAvatarVector
 import com.example.ui.components.HelpCenterDialog
+import com.example.ui.components.ObsidianModalDialog
 import com.example.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -512,107 +513,168 @@ fun ProfileScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LevelDetailsDialog(
     user: UserProfile,
     onDismiss: () -> Unit
 ) {
-    ModalBottomSheet(
+    ObsidianModalDialog(
         onDismissRequest = onDismiss,
-        containerColor = BgCanvas,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        title = "Progressão de Nível",
+        subtitle = "Seu Nível: ${user.tier.title} • ${user.badgesCount} Selos",
+        icon = Icons.Default.MilitaryTech,
+        iconTint = ColorMustard,
+        iconBgColor = ColorMustardLight,
+        headerAccentGradient = listOf(ColorMustard, ColorBurntOrange, ColorTeal),
+        wrapHeight = false,
+        buttons = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = ColorBurntOrange),
+                shape = RoundedCornerShape(9999.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                Text("Entendi", fontWeight = FontWeight.Bold, color = Color.White)
+            }
+        }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(vertical = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Icon(Icons.Default.MilitaryTech, contentDescription = null, tint = ObsidianMustardYellow, modifier = Modifier.size(48.dp))
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Seu Nível: ${user.tier.title}",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = ColorDarkObsidian
-            )
-            Text(
-                text = "${user.badgesCount} Selos • ${user.checkInsCount} Presenças",
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary
-            )
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            
-            // Tier Timeline
-            val tiers = UserTier.values()
-            
-            tiers.forEachIndexed { index, tier ->
-                val isAchieved = user.tier.ordinal >= tier.ordinal
-                val isCurrent = user.tier == tier
-                
+            // Card resumo do usuário
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = BgSecondary,
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm)
+            ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Top
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(40.dp)) {
-                        Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .clip(CircleShape)
-                                .background(if (isAchieved) ColorTeal else BorderLight),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (isAchieved) {
-                                Icon(Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
-                            }
-                        }
-                        
-                        if (index < tiers.size - 1) {
-                            Box(
-                                modifier = Modifier
-                                    .width(2.dp)
-                                    .height(60.dp)
-                                    .background(if (user.tier.ordinal > tier.ordinal) ColorTeal else BorderLight)
-                            )
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.width(16.dp))
-                    
-                    Column(modifier = Modifier.padding(bottom = 24.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "Nível ${tier.title}",
-                                fontWeight = FontWeight.Bold,
-                                color = if (isAchieved) ColorDarkObsidian else TextMuted,
-                                fontSize = 16.sp
-                            )
-                            if (isCurrent) {
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Surface(shape = RoundedCornerShape(8.dp), color = ColorTealLight) {
-                                    Text("Atual", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = ColorTeal, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
-                                }
-                            }
-                        }
+                    Column {
                         Text(
-                            text = "Requer: ${tier.threshold} pontos/selos",
-                            fontSize = 12.sp,
-                            color = if (isAchieved) TextSecondary else TextMuted
+                            text = "Status de Participação",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextMuted
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Vantagens: ${tier.storyPhotos} fotos no Stories (duração: ${tier.storyDuration})",
-                            fontSize = 13.sp,
-                            color = if (isAchieved) ObsidianTeal else TextMuted,
-                            fontWeight = FontWeight.Medium
+                            text = "${user.badgesCount} Selos • ${user.checkInsCount} Presenças",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = ColorDarkObsidian
+                        )
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = ColorTealLight
+                    ) {
+                        Text(
+                            text = user.tier.title,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = ColorTeal
                         )
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(24.dp))
+
+            // Timeline dos Níveis
+            val tiers = UserTier.values()
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(0.dp)
+            ) {
+                tiers.forEachIndexed { index, tier ->
+                    val isAchieved = user.tier.ordinal >= tier.ordinal
+                    val isCurrent = user.tier == tier
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.width(36.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(26.dp)
+                                    .clip(CircleShape)
+                                    .background(if (isAchieved) ColorTeal else BorderLight),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (isAchieved) {
+                                    Icon(
+                                        Icons.Default.Check,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(15.dp)
+                                    )
+                                }
+                            }
+
+                            if (index < tiers.size - 1) {
+                                Box(
+                                    modifier = Modifier
+                                        .width(2.dp)
+                                        .height(58.dp)
+                                        .background(if (user.tier.ordinal > tier.ordinal) ColorTeal else BorderLight)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column(modifier = Modifier.padding(bottom = 20.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "Nível ${tier.title}",
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isAchieved) ColorDarkObsidian else TextMuted,
+                                    fontSize = 15.sp
+                                )
+                                if (isCurrent) {
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = ColorBurntOrangeLight
+                                    ) {
+                                        Text(
+                                            "Nível Atual",
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = ColorBurntOrange,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                            }
+                            Text(
+                                text = "Requer: ${tier.threshold} pontos/selos",
+                                fontSize = 12.sp,
+                                color = if (isAchieved) TextSecondary else TextMuted
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Vantagens: ${tier.storyPhotos} fotos no Stories (duração: ${tier.storyDuration})",
+                                fontSize = 12.5.sp,
+                                color = if (isAchieved) ColorTeal else TextMuted,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

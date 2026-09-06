@@ -5,8 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -86,182 +84,124 @@ fun HelpCenterDialog(
 
     var expandedTopicId by remember { mutableStateOf<String?>(null) }
 
-    Dialog(
+    ObsidianModalDialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth(0.94f)
-                .fillMaxHeight(0.85f)
-                .testTag("help_center_dialog"),
-            shape = RoundedCornerShape(24.dp),
-            color = BgSurface,
-            border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm)
-        ) {
-            Column(
+        title = "Central de Ajuda",
+        subtitle = "Guia de Experiência & Presença Real",
+        icon = Icons.Default.HelpCenter,
+        iconTint = ColorTeal,
+        iconBgColor = ColorTealLight,
+        headerAccentGradient = listOf(ColorTeal, ColorBurntOrange, ColorMustard),
+        wrapHeight = false,
+        buttons = {
+            Button(
+                onClick = onDismiss,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(20.dp)
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(9999.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = ColorTeal)
             ) {
-                // Header
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                Text(
+                    text = "Entendido",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    color = Color.White
+                )
+            }
+        }
+    ) {
+        // Lista de tópicos explicativos em cartões expansíveis
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("help_center_dialog"),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            helpTopics.forEach { topic ->
+                val isExpanded = expandedTopicId == topic.id
+
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .clickable {
+                            expandedTopicId = if (isExpanded) null else topic.id
+                        },
+                    shape = RoundedCornerShape(16.dp),
+                    color = if (isExpanded) BgSecondary else BgCanvas,
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        if (isExpanded) ColorTeal.copy(alpha = 0.5f) else BorderWarm
+                    )
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .background(ColorTealLight, CircleShape),
-                            contentAlignment = Alignment.Center
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.HelpCenter,
-                                contentDescription = null,
-                                tint = ColorTeal,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                        Column {
-                            Text(
-                                text = "Central de Ajuda",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = ColorDarkObsidian
-                            )
-                            Text(
-                                text = "Como funciona o app",
-                                fontSize = 12.sp,
-                                color = TextSecondary
-                            )
-                        }
-                    }
-
-                    IconButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.testTag("close_help_dialog_btn")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Fechar",
-                            tint = TextSecondary
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Lista de tópicos explicativos em cartões expansíveis
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    items(helpTopics, key = { it.id }) { topic ->
-                        val isExpanded = expandedTopicId == topic.id
-
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(16.dp))
-                                .clickable {
-                                    expandedTopicId = if (isExpanded) null else topic.id
-                                },
-                            shape = RoundedCornerShape(16.dp),
-                            color = if (isExpanded) BgSecondary else BgCanvas,
-                            border = androidx.compose.foundation.BorderStroke(
-                                1.dp,
-                                if (isExpanded) ColorTeal.copy(alpha = 0.5f) else BorderWarm
-                            )
-                        ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .background(
+                                            if (isExpanded) ColorTeal else ColorTealLight,
+                                            CircleShape
+                                        ),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(36.dp)
-                                                .background(
-                                                    if (isExpanded) ColorTeal else ColorTealLight,
-                                                    CircleShape
-                                                ),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = topic.icon,
-                                                contentDescription = null,
-                                                tint = if (isExpanded) Color.White else ColorTeal,
-                                                modifier = Modifier.size(18.dp)
-                                            )
-                                        }
-                                        Column {
-                                            Text(
-                                                text = topic.title,
-                                                fontSize = 14.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = ColorDarkObsidian
-                                            )
-                                            Text(
-                                                text = topic.subtitle,
-                                                fontSize = 11.5.sp,
-                                                color = TextSecondary
-                                            )
-                                        }
-                                    }
-
                                     Icon(
-                                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                        imageVector = topic.icon,
                                         contentDescription = null,
-                                        tint = TextSecondary,
-                                        modifier = Modifier.size(20.dp)
+                                        tint = if (isExpanded) Color.White else ColorTeal,
+                                        modifier = Modifier.size(18.dp)
                                     )
                                 }
-
-                                AnimatedVisibility(visible = isExpanded) {
-                                    Column(modifier = Modifier.padding(top = 10.dp)) {
-                                        HorizontalDivider(
-                                            modifier = Modifier.padding(vertical = 6.dp),
-                                            color = BorderWarm
-                                        )
-                                        Text(
-                                            text = topic.description,
-                                            fontSize = 13.sp,
-                                            color = ColorDarkObsidian,
-                                            lineHeight = 18.sp
-                                        )
-                                    }
+                                Column {
+                                    Text(
+                                        text = topic.title,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = ColorDarkObsidian
+                                    )
+                                    Text(
+                                        text = topic.subtitle,
+                                        fontSize = 11.5.sp,
+                                        color = TextSecondary
+                                    )
                                 }
+                            }
+
+                            Icon(
+                                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                contentDescription = null,
+                                tint = TextSecondary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        AnimatedVisibility(visible = isExpanded) {
+                            Column(modifier = Modifier.padding(top = 10.dp)) {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 6.dp),
+                                    color = BorderWarm
+                                )
+                                Text(
+                                    text = topic.description,
+                                    fontSize = 13.sp,
+                                    color = ColorDarkObsidian,
+                                    lineHeight = 18.sp
+                                )
                             }
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Button(
-                    onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = ColorTeal)
-                ) {
-                    Text(
-                        text = "Entendido",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
-                }
             }
         }
+        }
     }
-}

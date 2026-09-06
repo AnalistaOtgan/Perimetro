@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.*
 import com.example.ui.components.HelpCenterDialog
+import com.example.ui.components.ObsidianModalDialog
 import com.example.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -443,7 +444,6 @@ fun BadgeItemCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AwardBadgeDialog(
     defaultBadge: SocialBadge,
@@ -455,66 +455,149 @@ fun AwardBadgeDialog(
     var selectedBadge by remember { mutableStateOf(defaultBadge) }
     var selectedTier by remember { mutableStateOf(UserTier.BRONZE) }
 
-    AlertDialog(
+    ObsidianModalDialog(
         onDismissRequest = onDismiss,
-        title = {
-            Column {
-                Text(
-                    text = "Conceder Selo a um Participante",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-                Text(
-                    text = "Ganha +0.50 OQUANTUM ao reconhecer presença",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = ObsidianTeal,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        },
-        text = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+        title = "Conceder Selo de Tribo",
+        subtitle = "+0.50 OQUANTUM ao reconhecer presença",
+        icon = getBadgeVector(selectedBadge.id),
+        iconTint = ColorBurntOrange,
+        iconBgColor = ColorBurntOrangeLight,
+        headerAccentGradient = listOf(ColorBurntOrange, ColorMustard, ColorTeal),
+        wrapHeight = true,
+        buttons = {
+            OutlinedButton(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(48.dp),
+                shape = RoundedCornerShape(9999.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary)
             ) {
+                Text("Cancelar", fontWeight = FontWeight.SemiBold)
+            }
+
+            Button(
+                onClick = {
+                    val finalName = if (recipientName.isBlank()) "Participante Presencial" else recipientName
+                    onConfirm(finalName, selectedBadge, selectedTier)
+                },
+                modifier = Modifier
+                    .weight(1.3f)
+                    .height(48.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = ColorBurntOrange),
+                shape = RoundedCornerShape(9999.dp),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Stars,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Conceder Selo", fontWeight = FontWeight.Bold, color = Color.White)
+            }
+        }
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            // Input participante
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = "Participante",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = ColorDarkObsidian
+                )
                 OutlinedTextField(
                     value = recipientName,
                     onValueChange = { recipientName = it },
-                    label = { Text("Nome ou @handle do participante") },
-                    placeholder = { Text("Ex: Marina Luz") },
+                    placeholder = { Text("Ex: Marina Luz ou @marina", color = TextMuted) },
                     singleLine = true,
+                    shape = RoundedCornerShape(14.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = ColorBurntOrange,
+                        unfocusedBorderColor = BorderWarm,
+                        focusedContainerColor = BgSurface,
+                        unfocusedContainerColor = BgSecondary
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("peer_name_input")
                 )
+            }
 
+            // Preview do Selo Selecionado
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = BgSecondary,
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm)
+            ) {
                 Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        text = "Selo Selecionado:",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Icon(
-                        imageVector = getBadgeVector(selectedBadge.id),
-                        contentDescription = null,
-                        tint = ObsidianTeal,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        text = selectedBadge.name,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .background(ColorBurntOrangeLight, RoundedCornerShape(10.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = getBadgeVector(selectedBadge.id),
+                                contentDescription = null,
+                                tint = ColorBurntOrange,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Column {
+                            Text(
+                                text = selectedBadge.name,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = ColorDarkObsidian
+                            )
+                            Text(
+                                text = selectedBadge.description,
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.5.sp),
+                                color = TextMuted,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = ColorTealLight
+                    ) {
+                        Text(
+                            text = "+0.50 OQ",
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                            color = ColorTeal,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
+            }
 
+            // Seleção de Nível / Tier
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    text = "Nível do Selo Concedido:",
-                    style = MaterialTheme.typography.labelMedium
+                    text = "Nível do Selo Concedido",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = ColorDarkObsidian
                 )
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -524,47 +607,54 @@ fun AwardBadgeDialog(
                         Surface(
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(8.dp)),
-                            color = if (isSelected) ObsidianBurntOrange else MaterialTheme.colorScheme.surfaceVariant,
+                                .clip(RoundedCornerShape(10.dp)),
+                            color = if (isSelected) ColorBurntOrange else BgSecondary,
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                if (isSelected) ColorBurntOrange else BorderWarm
+                            ),
                             onClick = { selectedTier = tier }
                         ) {
                             Box(
-                                modifier = Modifier.padding(vertical = 8.dp),
+                                modifier = Modifier.padding(vertical = 10.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
                                     text = tier.title,
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                                    color = if (isSelected) Color.White else ColorDarkObsidian
                                 )
                             }
                         }
                     }
                 }
+            }
 
-                Text(
-                    text = "Privacidade: O selo exato é discreto para terceiros. Se a pessoa também te conceder um selo de nível ${selectedTier.title}, uma Conexão é criada automaticamente.",
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    val finalName = if (recipientName.isBlank()) "Participante Presencial" else recipientName
-                    onConfirm(finalName, selectedBadge, selectedTier)
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = ObsidianBurntOrange)
+            // Nota de Privacidade e Reciprocidade
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = BgSecondary,
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm)
             ) {
-                Text("Conceder Selo")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar")
+                Row(
+                    modifier = Modifier.padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = TextSecondary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = "Privacidade: O selo é discreto. Se a pessoa também te conceder um selo de nível ${selectedTier.title}, uma Conexão é criada automaticamente.",
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, lineHeight = 15.sp),
+                        color = TextSecondary
+                    )
+                }
             }
         }
-    )
+    }
 }

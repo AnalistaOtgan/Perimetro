@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -31,9 +32,11 @@ import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.example.model.*
 import com.example.ui.components.ObsidianLogoEmblem
+import com.example.ui.components.ObsidianModalDialog
 import com.example.ui.components.ObsidianPrismRatingIcon
 import com.example.ui.components.ObsidianResonanceIcon
 import com.example.ui.components.ObsidianStationPortalIcon
+import com.example.ui.components.DynamicQRCodeCard
 import com.example.ui.theme.*
 
 /**
@@ -545,183 +548,191 @@ fun AuditInspectionDialog(
     event: SocialEvent,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
+    ObsidianModalDialog(
         onDismissRequest = onDismiss,
-        title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .background(ColorTealLight, RoundedCornerShape(10.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.VerifiedUser,
-                        contentDescription = null,
-                        tint = ColorTeal,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(10.dp))
-                Column {
+        title = "Auditoria Criptográfica",
+        subtitle = event.title,
+        icon = Icons.Default.VerifiedUser,
+        iconTint = ColorTeal,
+        iconBgColor = ColorTealLight,
+        headerAccentGradient = listOf(ColorTeal, ObsidianTealLight, ColorMustard),
+        wrapHeight = true,
+        buttons = {
+            Button(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = ColorTeal),
+                shape = RoundedCornerShape(9999.dp),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Concluir Auditoria", fontWeight = FontWeight.Bold, color = Color.White)
+            }
+        }
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            // PostGIS Geofence Info
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = BgSecondary,
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm)
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .background(ColorTeal, CircleShape)
+                        )
+                        Text(
+                            text = "Geofence PostGIS:",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = ColorTeal
+                        )
+                        Text(
+                            text = "Ativo (${event.geofenceRadiusMeters}m)",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = ColorDarkObsidian
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Auditoria Criptográfica",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = ColorDarkObsidian
-                    )
-                    Text(
-                        text = event.title,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary,
-                        maxLines = 1
+                        text = "Ponto de ancoragem: -23.5955, -46.6853\nProtocolo: 2-Fatores (GPS Geofence + QR HMAC 15s)",
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp, lineHeight = 16.sp),
+                        color = TextSecondary
                     )
                 }
             }
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // PostGIS Geofence Info
-                Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = BgSecondary,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm)
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "Geofence PostGIS:",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = ColorTeal
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "Ativo (${event.geofenceRadiusMeters}m)",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = ColorDarkObsidian
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Ponto de ancoragem: -23.5955, -46.6853\nProtocolo: 2-Fatores (GPS Geofence + QR HMAC 15s)",
-                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
-                            color = TextSecondary
-                        )
-                    }
-                }
 
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     text = "Presenças Auditadas no Local (${event.attendeesCount}):",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = ColorDarkObsidian
                 )
-
-                // Audit records list
-                listOf(
-                    Triple("Alex Silva", "42m do centroide • 08:32", "Validado 2FA"),
-                    Triple("Beatriz Lima", "18m do centroide • 08:35", "Validado 2FA"),
-                    Triple("Carlos Eduardo", "65m do centroide • 08:41", "Validado 2FA")
-                ).take(event.attendeesCount.coerceAtLeast(1)).forEach { (name, meta, status) ->
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        color = Color.White,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .background(ColorTealLight, RoundedCornerShape(8.dp)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = name.first().toString(),
-                                        fontWeight = FontWeight.Bold,
-                                        color = ColorTeal
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Column {
-                                    Text(
-                                        text = name,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = ColorDarkObsidian
-                                    )
-                                    Text(
-                                        text = meta,
-                                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
-                                        color = TextMuted
-                                    )
-                                }
-                            }
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = ColorTealLight
-                            ) {
-                                Text(
-                                    text = status,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                    color = ColorTeal,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // Integrity Summary Card
                 Surface(
+                    shape = RoundedCornerShape(9999.dp),
+                    color = ColorTealLight
+                ) {
+                    Text(
+                        text = "100% On-site",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = ColorTeal
+                    )
+                }
+            }
+
+            // Audit records list
+            listOf(
+                Triple("Alex Silva", "42m do centroide • 08:32", "Validado 2FA"),
+                Triple("Beatriz Lima", "18m do centroide • 08:35", "Validado 2FA"),
+                Triple("Carlos Eduardo", "65m do centroide • 08:41", "Validado 2FA")
+            ).take(event.attendeesCount.coerceAtLeast(1)).forEach { (name, meta, status) ->
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    color = ColorBurntOrangeLight,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, ColorBurntOrangeBorder)
+                    color = Color.White,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm)
                 ) {
                     Row(
                         modifier = Modifier.padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = ColorBurntOrange,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Integridade 100%: Nenhuma validação remota fora do geofence.",
-                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
-                            color = ColorDarkObsidian,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .background(ColorTealLight, RoundedCornerShape(8.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = name.first().toString(),
+                                    fontWeight = FontWeight.Bold,
+                                    color = ColorTeal
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = name,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ColorDarkObsidian
+                                )
+                                Text(
+                                    text = meta,
+                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.5.sp),
+                                    color = TextMuted
+                                )
+                            }
+                        }
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = ColorTealLight
+                        ) {
+                            Text(
+                                text = status,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                color = ColorTeal,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = ColorTeal),
-                shape = RoundedCornerShape(9999.dp)
+
+            // Integrity Summary Card
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = ColorBurntOrangeLight,
+                border = androidx.compose.foundation.BorderStroke(1.dp, ColorBurntOrangeBorder)
             ) {
-                Text("Fechar Relatório", fontWeight = FontWeight.Bold)
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = ColorBurntOrange,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Integridade 100%: Nenhuma validação remota fora do geofence.",
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp, lineHeight = 16.sp),
+                        color = ColorDarkObsidian,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
-    )
+    }
 }
 
 @Composable
@@ -729,68 +740,107 @@ fun CheckInStationDialog(
     event: SocialEvent,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
+    ObsidianModalDialog(
         onDismissRequest = onDismiss,
-        title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .background(ColorBurntOrangeLight, RoundedCornerShape(10.dp)),
-                    contentAlignment = Alignment.Center
+        title = "Estação de Check-in",
+        subtitle = event.title,
+        customIcon = {
+            ObsidianStationPortalIcon(
+                size = 24.dp,
+                tint = ColorBurntOrange,
+                animated = true
+            )
+        },
+        iconBgColor = ColorBurntOrangeLight,
+        headerAccentGradient = listOf(ColorBurntOrange, ColorMustard, ColorTeal),
+        wrapHeight = true,
+        buttons = {
+            Button(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .testTag("close_station_btn"),
+                colors = ButtonDefaults.buttonColors(containerColor = ColorBurntOrange),
+                shape = RoundedCornerShape(9999.dp),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Concluir Estação",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    color = Color.White
+                )
+            }
+        }
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            // Explanatory Banner Card
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                color = BgSecondary,
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm)
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    ObsidianStationPortalIcon(
-                        size = 24.dp,
-                        tint = ColorBurntOrange,
-                        animated = true
-                    )
-                }
-                Spacer(modifier = Modifier.width(10.dp))
-                Column {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(ColorTealLight, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.QrCodeScanner,
+                            contentDescription = null,
+                            tint = ColorTeal,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                     Text(
-                        text = "Estação de Check-in",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = ColorDarkObsidian
-                    )
-                    Text(
-                        text = event.title,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary,
-                        maxLines = 1
+                        text = "Posicione este painel na recepção. Os participantes devem aproximar a câmera para validação cruzada com o GPS.",
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, lineHeight = 16.sp),
+                        color = TextSecondary
                     )
                 }
             }
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+
+            // Dynamic rotating QR Code Card
+            DynamicQRCodeCard(
+                eventId = event.id,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Geofence & Location Card
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                color = BgSecondary,
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm)
             ) {
-                Text(
-                    text = "Posicione este painel na recepção. Os participantes devem aproximar a câmera para validação cruzada com o GPS.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
-
-                // Dynamic rotating QR Code
-                com.example.ui.components.DynamicQRCodeCard(
-                    eventId = event.id,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = BgSecondary,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderWarm)
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier.padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .background(ColorTealLight, CircleShape),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.LocationOn,
@@ -798,24 +848,26 @@ fun CheckInStationDialog(
                             tint = ColorTeal,
                             modifier = Modifier.size(16.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
                         Text(
-                            text = "${event.locationName} (Raio ${event.geofenceRadiusMeters}m)",
-                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
-                            color = TextSecondary
+                            text = event.locationName,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = ColorDarkObsidian,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "Geofence ativo • Raio de precisão ${event.geofenceRadiusMeters}m",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.5.sp),
+                            color = ColorTeal,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = ColorBurntOrange),
-                shape = RoundedCornerShape(9999.dp)
-            ) {
-                Text("Concluir Estação", fontWeight = FontWeight.Bold)
-            }
         }
-    )
+    }
 }
