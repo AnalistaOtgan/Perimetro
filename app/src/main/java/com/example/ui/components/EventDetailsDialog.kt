@@ -257,11 +257,28 @@ fun EventDetailsDialog(
                                                 modifier = Modifier.size(14.dp)
                                             )
                                         }
-                                        Text(
-                                            text = if (isOwner) "👑 Você é o organizador" else "Organizador Verificado",
-                                            fontSize = 11.5.sp,
-                                            color = if (isOwner) ColorBurntOrange else TextSecondary
-                                        )
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            if (isOwner) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Stars,
+                                                    contentDescription = null,
+                                                    tint = ColorBurntOrange,
+                                                    modifier = Modifier.size(13.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text(
+                                                    text = "Você é o organizador",
+                                                    fontSize = 11.5.sp,
+                                                    color = ColorBurntOrange
+                                                )
+                                            } else {
+                                                Text(
+                                                    text = "Organizador Verificado",
+                                                    fontSize = 11.5.sp,
+                                                    color = TextSecondary
+                                                )
+                                            }
+                                        }
                                     }
                                 }
 
@@ -276,7 +293,7 @@ fun EventDetailsDialog(
                                         ObsidianPrismRatingIcon(isFilled = true, size = 13.dp, tint = ColorMustardHover)
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(
-                                            text = "★ %.1f".format(event.ratingAvg),
+                                            text = "%.1f".format(event.ratingAvg),
                                             fontSize = 11.5.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = ColorMustardHover
@@ -321,7 +338,7 @@ fun EventDetailsDialog(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Row {
-                                    listOf("⚡", "🎨", "🚀").forEachIndexed { idx, emoji ->
+                                    listOf(Icons.Default.Bolt, Icons.Default.Palette, Icons.Default.RocketLaunch).forEachIndexed { idx, iconVector ->
                                         Box(
                                             modifier = Modifier
                                                 .size(24.dp)
@@ -330,7 +347,12 @@ fun EventDetailsDialog(
                                                 .border(1.5.dp, BgSurface, CircleShape),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Text(text = emoji, fontSize = 11.sp)
+                                            Icon(
+                                                imageVector = iconVector,
+                                                contentDescription = null,
+                                                tint = if (idx == 0) ColorTeal else if (idx == 1) ColorMustardHover else ColorBurntOrange,
+                                                modifier = Modifier.size(13.dp)
+                                            )
                                         }
                                     }
                                 }

@@ -16,7 +16,7 @@ class ObsidianRepository {
             name = "Alex Silva",
             handle = "@alex.obsidian",
             bio = "Amante de música ao vivo, festivais e conexões reais. Sempre no front.",
-            avatarEmoji = "⚡",
+            avatarEmoji = "bolt",
             tier = UserTier.PRATA,
             oquantumBalance = 248.75,
             badgesCount = 18,
@@ -47,7 +47,7 @@ class ObsidianRepository {
                 visibilityTier = VisibilityTier.PUBLICO,
                 checkInMethod = CheckInMethod.QR_DYNAMIC,
                 tags = listOf("IA", "Agentes", "Networking", "Criptografia"),
-                hostName = "Obsidian Tech Hub • 🛡️",
+                hostName = "Obsidian Tech Hub",
                 hostId = "obsidian_hub",
                 isUserHost = false,
                 mediaReel = listOf(
@@ -75,7 +75,7 @@ class ObsidianRepository {
                 visibilityTier = VisibilityTier.BRONZE_PLUS,
                 checkInMethod = CheckInMethod.QR_DYNAMIC,
                 tags = listOf("Rust", "Go", "Performance", "Open Source"),
-                hostName = "Alex Silva (Você) • 🛡️",
+                hostName = "Alex Silva (Você)",
                 hostId = "user_me",
                 isUserHost = true,
                 mediaReel = listOf(
@@ -102,7 +102,7 @@ class ObsidianRepository {
                 visibilityTier = VisibilityTier.PUBLICO,
                 checkInMethod = CheckInMethod.QR_DYNAMIC,
                 tags = listOf("Música", "Bebidas", "Ambiente", "Segurança"),
-                hostName = "Coletivo Horizonte • 🛡️",
+                hostName = "Coletivo Horizonte",
                 hostId = "coletivo_horizonte",
                 isUserHost = false,
                 mediaReel = listOf(
@@ -129,7 +129,7 @@ class ObsidianRepository {
                 visibilityTier = VisibilityTier.BRONZE_PLUS,
                 checkInMethod = CheckInMethod.GPS_ONLY,
                 tags = listOf("Custo-benefício", "Bebidas", "Som", "Decoração"),
-                hostName = "Cervejaria Malte • 🛡️",
+                hostName = "Cervejaria Malte",
                 geofenceRadiusMeters = 80,
                 bannerTheme = "beer",
                 latitude = -23.5620,
@@ -150,7 +150,7 @@ class ObsidianRepository {
                 visibilityTier = VisibilityTier.OURO_VIP,
                 checkInMethod = CheckInMethod.BLE_BEACON,
                 tags = listOf("Exclusivo", "Segurança", "Gourmet", "Networking"),
-                hostName = "Conselho Obsidian • 🛡️",
+                hostName = "Conselho Obsidian",
                 geofenceRadiusMeters = 50,
                 bannerTheme = "gala",
                 latitude = -23.5980,
@@ -163,34 +163,34 @@ class ObsidianRepository {
     private val _badges = MutableStateFlow<List<SocialBadge>>(
         listOf(
             // Música
-            SocialBadge("b_1", "Roqueiro", BadgeCategory.MUSICA, "Presente em mais de 5 shows de rock e festivais ao vivo.", "🎸", UserTier.PRATA, 7, 15, true),
-            SocialBadge("b_2", "Eletrônico", BadgeCategory.MUSICA, "Vivência em pistas e amanheceres da música eletrônica.", "🎛️", UserTier.BRONZE, 4, 5, true),
-            SocialBadge("b_3", "Eclético", BadgeCategory.MUSICA, "Aprecia de jazz ao paredão sem preconceitos sonoros.", "🎧", UserTier.OURO, 28, 40, true),
+            SocialBadge("b_1", "Roqueiro", BadgeCategory.MUSICA, "Presente em mais de 5 shows de rock e festivais ao vivo.", "music_note", UserTier.PRATA, 7, 15, true),
+            SocialBadge("b_2", "Eletrônico", BadgeCategory.MUSICA, "Vivência em pistas e amanheceres da música eletrônica.", "equalizer", UserTier.BRONZE, 4, 5, true),
+            SocialBadge("b_3", "Eclético", BadgeCategory.MUSICA, "Aprecia de jazz ao paredão sem preconceitos sonoros.", "headphones", UserTier.OURO, 28, 40, true),
 
             // Comportamento
-            SocialBadge("b_4", "Animado", BadgeCategory.COMPORTAMENTO, "Irradia energia positiva e anima a roda de presença.", "☀️", UserTier.PRATA, 12, 15, true),
-            SocialBadge("b_5", "Respeitoso", BadgeCategory.COMPORTAMENTO, "Postura exemplar de consentimento e cordialidade coletiva.", "🤝", UserTier.OBSIDIAN, 102, 100, true),
-            SocialBadge("b_6", "Confiável", BadgeCategory.COMPORTAMENTO, "Presença confirmada e pontualidade nos compromissos da tribo.", "🛡️", UserTier.OURO, 45, 40, true),
+            SocialBadge("b_4", "Animado", BadgeCategory.COMPORTAMENTO, "Irradia energia positiva e anima a roda de presença.", "wb_sunny", UserTier.PRATA, 12, 15, true),
+            SocialBadge("b_5", "Respeitoso", BadgeCategory.COMPORTAMENTO, "Postura exemplar de consentimento e cordialidade coletiva.", "handshake", UserTier.OBSIDIAN, 102, 100, true),
+            SocialBadge("b_6", "Confiável", BadgeCategory.COMPORTAMENTO, "Presença confirmada e pontualidade nos compromissos da tribo.", "shield", UserTier.OURO, 45, 40, true),
 
             // Frequência
-            SocialBadge("b_7", "Coruja", BadgeCategory.FREQUENCIA, "Ativo na vida noturna até o nascer do sol.", "🦉", UserTier.PRATA, 14, 15, false),
-            SocialBadge("b_8", "Maratonista", BadgeCategory.FREQUENCIA, "Três ou mais eventos no mesmo fim de semana.", "👟", UserTier.BRONZE, 3, 5, false),
-            SocialBadge("b_9", "Consistente", BadgeCategory.FREQUENCIA, "Check-in em eventos toda semana por 3 meses seguidos.", "📅", UserTier.BRONZE, 2, 5, false),
+            SocialBadge("b_7", "Coruja", BadgeCategory.FREQUENCIA, "Ativo na vida noturna até o nascer do sol.", "nights_stay", UserTier.PRATA, 14, 15, false),
+            SocialBadge("b_8", "Maratonista", BadgeCategory.FREQUENCIA, "Três ou mais eventos no mesmo fim de semana.", "directions_run", UserTier.BRONZE, 3, 5, false),
+            SocialBadge("b_9", "Consistente", BadgeCategory.FREQUENCIA, "Check-in em eventos toda semana por 3 meses seguidos.", "event_available", UserTier.BRONZE, 2, 5, false),
 
             // Exploração
-            SocialBadge("b_10", "Explorador", BadgeCategory.EXPLORACAO, "Desbravou eventos em mais de 5 bairros diferentes.", "🧭", UserTier.PRATA, 11, 15, true),
-            SocialBadge("b_11", "Viajante", BadgeCategory.EXPLORACAO, "Validou presença física em eventos de outras cidades.", "✈️", UserTier.BRONZE, 2, 5, false),
-            SocialBadge("b_12", "Lenda do Pedaço", BadgeCategory.EXPLORACAO, "Figura carimbada e reconhecida na sua região.", "👑", UserTier.OURO, 38, 40, false),
+            SocialBadge("b_10", "Explorador", BadgeCategory.EXPLORACAO, "Desbravou eventos em mais de 5 bairros diferentes.", "explore", UserTier.PRATA, 11, 15, true),
+            SocialBadge("b_11", "Viajante", BadgeCategory.EXPLORACAO, "Validou presença física em eventos de outras cidades.", "flight_takeoff", UserTier.BRONZE, 2, 5, false),
+            SocialBadge("b_12", "Lenda do Pedaço", BadgeCategory.EXPLORACAO, "Figura carimbada e reconhecida na sua região.", "workspace_premium", UserTier.OURO, 38, 40, false),
 
             // Nicho
-            SocialBadge("b_13", "Cervejeiro", BadgeCategory.NICHO, "Frequenta taprooms e degustações de cerveja artesanal.", "🍺", UserTier.BRONZE, 4, 5, false),
-            SocialBadge("b_14", "Gourmet", BadgeCategory.NICHO, "Apreciador da gastronomia de rua e bistrôs locais.", "🍽️", UserTier.BRONZE, 3, 5, false),
-            SocialBadge("b_15", "Artístico", BadgeCategory.NICHO, "Presença assídua em vernissages, cinema e poesia.", "🎨", UserTier.PRATA, 9, 15, true),
+            SocialBadge("b_13", "Cervejeiro", BadgeCategory.NICHO, "Frequenta taprooms e degustações de cerveja artesanal.", "local_bar", UserTier.BRONZE, 4, 5, false),
+            SocialBadge("b_14", "Gourmet", BadgeCategory.NICHO, "Apreciador da gastronomia de rua e bistrôs locais.", "restaurant", UserTier.BRONZE, 3, 5, false),
+            SocialBadge("b_15", "Artístico", BadgeCategory.NICHO, "Presença assídua em vernissages, cinema e poesia.", "palette", UserTier.PRATA, 9, 15, true),
 
             // Conquista
-            SocialBadge("b_16", "Organizador", BadgeCategory.CONQUISTA, "Criou eventos que reuniram mais de 50 pessoas.", "📋", UserTier.BRONZE, 1, 5, false),
-            SocialBadge("b_17", "Lendário", BadgeCategory.CONQUISTA, "Mais de 100 presenças atestadas por Proof of Presence.", "🔥", UserTier.OBSIDIAN, 42, 100, false),
-            SocialBadge("b_18", "Colecionador", BadgeCategory.CONQUISTA, "Acumulou selos em todas as 6 categorias da plataforma.", "💎", UserTier.OURO, 5, 6, false)
+            SocialBadge("b_16", "Organizador", BadgeCategory.CONQUISTA, "Criou eventos que reuniram mais de 50 pessoas.", "assignment", UserTier.BRONZE, 1, 5, false),
+            SocialBadge("b_17", "Lendário", BadgeCategory.CONQUISTA, "Mais de 100 presenças atestadas por Proof of Presence.", "local_fire_department", UserTier.OBSIDIAN, 42, 100, false),
+            SocialBadge("b_18", "Colecionador", BadgeCategory.CONQUISTA, "Acumulou selos em todas as 6 categorias da plataforma.", "diamond", UserTier.OURO, 5, 6, false)
         )
     )
     val badges: StateFlow<List<SocialBadge>> = _badges.asStateFlow()
@@ -295,7 +295,7 @@ class ObsidianRepository {
             isCheckedIn = true,
             checkInTimestamp = System.currentTimeMillis(),
             tags = listOf("Novidade", "Criado por Você"),
-            hostName = "${_currentUser.value.name} (Você) • 🛡️",
+            hostName = "${_currentUser.value.name} (Você)",
             hostId = _currentUser.value.id,
             isUserHost = true,
             mediaReel = mediaReel

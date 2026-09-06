@@ -46,20 +46,21 @@ import com.example.ui.components.OrganicCirclesBackground
 import com.example.ui.components.InteractiveCityEventMap
 import com.example.ui.components.ParticipantSonarRadar
 import com.example.ui.theme.*
+import androidx.compose.ui.graphics.vector.ImageVector
 
 enum class ParticipantRadarViewMode {
     MAPA,
     LISTA
 }
 
-enum class ParticipantFilterMode(val label: String) {
-    TODOS("🔥 Todos"),
-    NO_MEU_RAIO("🚶 < 1.5km"),
-    AO_VIVO("✨ Ao Vivo"),
-    BARES("🍸 Bares"),
-    TECH("💻 Tech"),
-    SHOWS("🎸 Shows"),
-    TRIBO("👥 Minha Tribo")
+enum class ParticipantFilterMode(val label: String, val icon: ImageVector) {
+    TODOS("Todos", Icons.Default.LocalFireDepartment),
+    NO_MEU_RAIO("< 1.5km", Icons.Default.DirectionsWalk),
+    AO_VIVO("Ao Vivo", Icons.Default.AutoAwesome),
+    BARES("Bares", Icons.Default.LocalBar),
+    TECH("Tech", Icons.Default.Code),
+    SHOWS("Shows", Icons.Default.MusicNote),
+    TRIBO("Minha Tribo", Icons.Default.Groups)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -189,7 +190,7 @@ fun RadarScreen(
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "São Paulo, SP • Ao vivo agora ✨",
+                                    text = "São Paulo, SP • Ao vivo agora",
                                     fontSize = 10.5.sp,
                                     color = ColorTeal,
                                     fontWeight = FontWeight.SemiBold
@@ -207,13 +208,24 @@ fun RadarScreen(
                             color = ColorMustardLight,
                             border = androidx.compose.foundation.BorderStroke(1.dp, ColorMustard.copy(alpha = 0.4f))
                         ) {
-                            Text(
-                                text = "⚡ 248.8 OQ",
-                                fontSize = 11.sp,
-                                color = ColorMustardHover,
-                                fontWeight = FontWeight.Black,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                            )
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Bolt,
+                                    contentDescription = null,
+                                    tint = ColorMustardHover,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                                Text(
+                                    text = "248.8 OQ",
+                                    fontSize = 11.sp,
+                                    color = ColorMustardHover,
+                                    fontWeight = FontWeight.Black
+                                )
+                            }
                         }
 
                         Surface(
@@ -302,6 +314,7 @@ fun RadarScreen(
                 items(ParticipantFilterMode.values()) { filterMode ->
                     ParticipantFilterChip(
                         label = filterMode.label,
+                        icon = filterMode.icon,
                         isSelected = currentFilter == filterMode,
                         onClick = { currentFilter = filterMode }
                     )
@@ -474,7 +487,7 @@ fun RadarScreen(
                             ) {
                                 ObsidianPrismRatingIcon(isFilled = true, size = 12.dp, tint = ColorMustard)
                                 Text(
-                                    text = "★ %.1f".format(activeEvent.ratingAvg),
+                                    text = "%.1f".format(activeEvent.ratingAvg),
                                     fontSize = 11.5.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = ColorMustardHover
@@ -521,12 +534,23 @@ fun RadarScreen(
                                     overflow = TextOverflow.Ellipsis
                                 )
                             }
-                            Text(
-                                text = "👥 ${activeEvent.attendeesCount} confirmados",
-                                fontSize = 11.5.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = ColorTeal
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Groups,
+                                    contentDescription = null,
+                                    tint = ColorTeal,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Text(
+                                    text = "${activeEvent.attendeesCount} confirmados",
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = ColorTeal
+                                )
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
@@ -558,13 +582,24 @@ fun RadarScreen(
                                         color = ColorMustardLight,
                                         border = androidx.compose.foundation.BorderStroke(1.dp, ColorMustard.copy(alpha = 0.4f))
                                     ) {
-                                        Text(
-                                            text = "⚡ +50 OQ",
-                                            fontSize = 11.5.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = ColorMustardHover,
-                                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
-                                        )
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(3.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Bolt,
+                                                contentDescription = null,
+                                                tint = ColorMustardHover,
+                                                modifier = Modifier.size(12.dp)
+                                            )
+                                            Text(
+                                                text = "+50 OQ",
+                                                fontSize = 11.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = ColorMustardHover
+                                            )
+                                        }
                                     }
                                 }
 
@@ -693,11 +728,35 @@ fun RadarScreen(
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = "★ ${ev.ratingAvg} • 👥 ${ev.attendeesCount}",
-                                    fontSize = 10.5.sp,
-                                    color = TextMuted
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Star,
+                                        contentDescription = null,
+                                        tint = ColorMustard,
+                                        modifier = Modifier.size(11.dp)
+                                    )
+                                    Text(
+                                        text = "${ev.ratingAvg}",
+                                        fontSize = 10.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = ColorDarkObsidian
+                                    )
+                                    Text(text = "•", fontSize = 10.5.sp, color = TextMuted)
+                                    Icon(
+                                        imageVector = Icons.Default.Groups,
+                                        contentDescription = null,
+                                        tint = TextMuted,
+                                        modifier = Modifier.size(11.dp)
+                                    )
+                                    Text(
+                                        text = "${ev.attendeesCount}",
+                                        fontSize = 10.5.sp,
+                                        color = TextMuted
+                                    )
+                                }
                             }
                         }
                     }
@@ -795,8 +854,15 @@ fun ParticipantInGeofenceCard(
                                 .background(ColorBurntOrange, CircleShape)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.Default.Celebration,
+                            contentDescription = null,
+                            tint = ColorBurntOrangeLight,
+                            modifier = Modifier.size(13.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "🎉 VOCÊ CHEGOU AO ENCONTRO!",
+                            text = "VOCÊ CHEGOU AO ENCONTRO!",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Black,
                             color = ColorBurntOrangeLight,
@@ -805,12 +871,23 @@ fun ParticipantInGeofenceCard(
                     }
                 }
 
-                Text(
-                    text = "A 45m • Ao vivo 🔥",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = ColorMustard
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "A 45m • Ao vivo",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = ColorMustard
+                    )
+                    Icon(
+                        imageVector = Icons.Default.LocalFireDepartment,
+                        contentDescription = null,
+                        tint = ColorMustard,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -824,11 +901,22 @@ fun ParticipantInGeofenceCard(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            Text(
-                text = "📍 ${event.locationName}",
-                fontSize = 13.sp,
-                color = TextMuted
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Place,
+                    contentDescription = null,
+                    tint = TextMuted,
+                    modifier = Modifier.size(14.dp)
+                )
+                Text(
+                    text = event.locationName,
+                    fontSize = 13.sp,
+                    color = TextMuted
+                )
+            }
 
             Spacer(modifier = Modifier.height(6.dp))
 
@@ -841,7 +929,7 @@ fun ParticipantInGeofenceCard(
                     .padding(horizontal = 10.dp, vertical = 6.dp)
             ) {
                 Row {
-                    listOf("⚡", "🎧", "✨").forEachIndexed { idx, emoji ->
+                    listOf(Icons.Default.Bolt, Icons.Default.Headphones, Icons.Default.AutoAwesome).forEachIndexed { idx, iconVector ->
                         Box(
                             modifier = Modifier
                                 .size(22.dp)
@@ -851,7 +939,12 @@ fun ParticipantInGeofenceCard(
                                 .border(1.dp, Color(0xFF161F20), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(text = emoji, fontSize = 10.sp)
+                            Icon(
+                                imageVector = iconVector,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(11.dp)
+                            )
                         }
                     }
                 }
@@ -928,7 +1021,7 @@ data class TribeFriendStory(
     val id: String,
     val name: String,
     val handle: String,
-    val avatarEmoji: String,
+    val avatarIcon: ImageVector,
     val eventTitle: String,
     val statusText: String,
     val isLive: Boolean = true,
@@ -945,12 +1038,12 @@ fun TribeSocialPresenceBar(
 ) {
     val friends = remember {
         listOf(
-            TribeFriendStory("f_1", "Beatriz", "@bia.lima", "⚡", "Noite Eletrônica", "Na pista 🎵", true, ColorTeal),
-            TribeFriendStory("f_2", "Carlos", "@kadu_sp", "🎧", "Sessão Acústica", "Chegando 🍻", true, ColorBurntOrange),
-            TribeFriendStory("f_3", "Juliana", "@ju.costa", "✨", "Paredão Cultural", "Vem que tá lindo!", true, ColorMustardHover),
-            TribeFriendStory("f_4", "Rodrigo", "@rodrigo", "🚀", "Summit IA", "Troca boa 🤖", true, ColorTeal),
-            TribeFriendStory("f_5", "Camila", "@camila", "🌅", "Rooftop Sunset", "Pôr do sol 🍹", true, ColorBurntOrange),
-            TribeFriendStory("f_6", "Lucas", "@lucas", "🍺", "Craft Beer Pub", "Mesa 4 🍻", false, ColorDarkObsidian)
+            TribeFriendStory("f_1", "Beatriz", "@bia.lima", Icons.Default.Bolt, "Noite Eletrônica", "Na pista", true, ColorTeal),
+            TribeFriendStory("f_2", "Carlos", "@kadu_sp", Icons.Default.Headphones, "Sessão Acústica", "Chegando", true, ColorBurntOrange),
+            TribeFriendStory("f_3", "Juliana", "@ju.costa", Icons.Default.AutoAwesome, "Paredão Cultural", "Vem que tá lindo!", true, ColorMustardHover),
+            TribeFriendStory("f_4", "Rodrigo", "@rodrigo", Icons.Default.RocketLaunch, "Summit IA", "Troca boa", true, ColorTeal),
+            TribeFriendStory("f_5", "Camila", "@camila", Icons.Default.WbSunny, "Rooftop Sunset", "Pôr do sol", true, ColorBurntOrange),
+            TribeFriendStory("f_6", "Lucas", "@lucas", Icons.Default.LocalBar, "Craft Beer Pub", "Mesa 4", false, ColorDarkObsidian)
         )
     }
 
@@ -983,10 +1076,16 @@ fun TribeSocialPresenceBar(
                 ) {
                     Box(modifier = Modifier.size(6.dp).background(ColorBurntOrange, CircleShape))
                     Text(
-                        text = "14 amigos ativos hoje 🔥",
+                        text = "14 amigos ativos hoje",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = ColorBurntOrangeHover
+                    )
+                    Icon(
+                        imageVector = Icons.Default.LocalFireDepartment,
+                        contentDescription = null,
+                        tint = ColorBurntOrangeHover,
+                        modifier = Modifier.size(12.dp)
                     )
                 }
             }
@@ -1013,7 +1112,12 @@ fun TribeSocialPresenceBar(
                             .border(1.5.dp, BorderWarm, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "⚡", fontSize = 24.sp)
+                        Icon(
+                            imageVector = Icons.Default.Bolt,
+                            contentDescription = null,
+                            tint = ColorTeal,
+                            modifier = Modifier.size(24.dp)
+                        )
                         Box(
                             modifier = Modifier
                                 .size(18.dp)
@@ -1069,7 +1173,12 @@ fun TribeSocialPresenceBar(
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = friend.avatarEmoji, fontSize = 24.sp)
+                        Icon(
+                            imageVector = friend.avatarIcon,
+                            contentDescription = null,
+                            tint = friend.accentColor,
+                            modifier = Modifier.size(24.dp)
+                        )
                         if (friend.isLive) {
                             Box(
                                 modifier = Modifier
@@ -1120,7 +1229,7 @@ fun TribeSocialPresenceBar(
                     ) {
                         // Avatares empilhados
                         Row {
-                            listOf("⚡", "🎧", "✨", "🚀").forEachIndexed { idx, emoji ->
+                            listOf(Icons.Default.Bolt, Icons.Default.Headphones, Icons.Default.AutoAwesome, Icons.Default.RocketLaunch).forEachIndexed { idx, iconVector ->
                                 Box(
                                     modifier = Modifier
                                         .size(26.dp)
@@ -1130,7 +1239,12 @@ fun TribeSocialPresenceBar(
                                         .border(1.5.dp, BgSurface, CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text(text = emoji, fontSize = 12.sp)
+                                    Icon(
+                                        imageVector = iconVector,
+                                        contentDescription = null,
+                                        tint = if (idx % 2 == 0) ColorTeal else ColorBurntOrange,
+                                        modifier = Modifier.size(13.dp)
+                                    )
                                 }
                             }
                         }
@@ -1163,6 +1277,7 @@ fun TribeSocialPresenceBar(
 @Composable
 fun ParticipantFilterChip(
     label: String,
+    icon: ImageVector? = null,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
@@ -1177,13 +1292,26 @@ fun ParticipantFilterChip(
             .clickable { onClick() }
             .shadow(if (isSelected) 3.dp else 1.dp, RoundedCornerShape(9999.dp), spotColor = Color(0x2400796B))
     ) {
-        Text(
-            text = label,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            color = if (isSelected) Color.White else TextSecondary
-        )
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = if (isSelected) Color.White else TextSecondary,
+                    modifier = Modifier.size(14.dp)
+                )
+            }
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                color = if (isSelected) Color.White else TextSecondary
+            )
+        }
     }
 }
 
@@ -1308,7 +1436,7 @@ fun ParticipantEventCard(
                         ) {
                             ObsidianPrismRatingIcon(isFilled = true, size = 12.dp, tint = ColorMustard)
                             Text(
-                                text = "★ %.1f".format(event.ratingAvg),
+                                text = "%.1f".format(event.ratingAvg),
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = ColorMustard
@@ -1325,13 +1453,24 @@ fun ParticipantEventCard(
                             .align(Alignment.BottomStart)
                             .padding(12.dp)
                     ) {
-                        Text(
-                            text = "📅 ${event.dateDisplay} às ${event.timeDisplay}",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                        )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CalendarToday,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Text(
+                                text = "${event.dateDisplay} às ${event.timeDisplay}",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
             }
@@ -1378,14 +1517,25 @@ fun ParticipantEventCard(
 
                     Spacer(modifier = Modifier.width(10.dp))
 
-                    Text(
-                        text = "👥 ${event.attendeesCount} na Tribo",
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = ColorTeal,
-                        maxLines = 1,
-                        softWrap = false
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Groups,
+                            contentDescription = null,
+                            tint = ColorTeal,
+                            modifier = Modifier.size(13.dp)
+                        )
+                        Text(
+                            text = "${event.attendeesCount} na Tribo",
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = ColorTeal,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))

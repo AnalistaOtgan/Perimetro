@@ -255,16 +255,19 @@ fun ParticipantSonarRadar(
                             .clickable { onSelectEvent(ev) },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = when (ev.category) {
-                                EventCategory.TECNOLOGIA -> "⚡"
-                                EventCategory.SHOW -> "🎵"
-                                EventCategory.BAR -> "🍺"
-                                EventCategory.MEETUP -> "🤝"
-                                EventCategory.PRIVADO -> "🛡️"
-                                else -> "📍"
-                            },
-                            fontSize = if (isSelected) 14.sp else 11.sp
+                        val categoryIcon = when (ev.category) {
+                            EventCategory.TECNOLOGIA -> Icons.Default.Bolt
+                            EventCategory.SHOW -> Icons.Default.MusicNote
+                            EventCategory.BAR -> Icons.Default.LocalBar
+                            EventCategory.MEETUP -> Icons.Default.Groups
+                            EventCategory.PRIVADO -> Icons.Default.Shield
+                            else -> Icons.Default.Place
+                        }
+                        Icon(
+                            imageVector = categoryIcon,
+                            contentDescription = ev.category.label,
+                            tint = Color.White,
+                            modifier = Modifier.size(if (isSelected) 14.dp else 11.dp)
                         )
                     }
                 }
@@ -313,12 +316,35 @@ fun ParticipantSonarRadar(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = if (ev.distanceKm <= 0.8) "🎉 VOCÊ ESTÁ NO LOCAL!" else "🚶 A ${ev.distanceKm}km de você",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (ev.distanceKm <= 0.8) ColorMustard else ColorTealLight
-                                )
+                                if (ev.distanceKm <= 0.8) {
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        tint = ColorMustard,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "VOCÊ ESTÁ NO LOCAL!",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = ColorMustard
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.DirectionsWalk,
+                                        contentDescription = null,
+                                        tint = ColorTealLight,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "A ${ev.distanceKm}km de você",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = ColorTealLight
+                                    )
+                                }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = "• ${ev.timeDisplay}",

@@ -392,7 +392,7 @@ fun BadgeItemCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Large emoji / glyph icon
+            // Large icon
             Box(
                 modifier = Modifier
                     .size(56.dp)
@@ -400,7 +400,12 @@ fun BadgeItemCard(
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = badge.iconEmoji, fontSize = 28.sp)
+                Icon(
+                    imageVector = getBadgeVector(badge.id),
+                    contentDescription = badge.name,
+                    tint = if (badge.isUnlocked) ObsidianTeal else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(28.dp)
+                )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -483,11 +488,27 @@ fun AwardBadgeDialog(
                         .testTag("peer_name_input")
                 )
 
-                Text(
-                    text = "Selo Selecionado: ${selectedBadge.iconEmoji} ${selectedBadge.name}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = "Selo Selecionado:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Icon(
+                        imageVector = getBadgeVector(selectedBadge.id),
+                        contentDescription = null,
+                        tint = ObsidianTeal,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = selectedBadge.name,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
 
                 Text(
                     text = "Nível do Selo Concedido:",

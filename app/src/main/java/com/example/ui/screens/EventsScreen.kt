@@ -39,9 +39,9 @@ import com.example.ui.theme.*
 
 enum class EventListFilterMode(val label: String) {
     TODOS("Todos"),
-    MAIS_PROXIMOS("🚶 Mais Próximos (< 1km)"),
-    BOMBANDO("🔥 Bombando na Tribo"),
-    COM_FOTOS("📸 Com Carretel de Fotos")
+    MAIS_PROXIMOS("Mais Próximos (< 1km)"),
+    BOMBANDO("Bombando na Tribo"),
+    COM_FOTOS("Com Carretel de Fotos")
 }
 
 data class SearchTag(val keyword: String, val label: String, val category: EventCategory? = null, val mode: EventListFilterMode? = null)
@@ -153,7 +153,7 @@ fun EventsScreen(
                                     letterSpacing = (-0.3).sp
                                 )
                                 Text(
-                                    text = "${filteredEvents.size} encontros confirmados em SP ✨",
+                                    text = "${filteredEvents.size} encontros confirmados em SP",
                                     fontSize = 12.sp,
                                     color = TextSecondary
                                 )
@@ -382,7 +382,12 @@ fun EventsScreen(
                                     .padding(32.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text(text = "🔍", fontSize = 42.sp)
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(42.dp),
+                                    tint = TextMuted
+                                )
                                 Spacer(modifier = Modifier.height(12.dp))
                                 Text(
                                     text = "Nenhum encontro encontrado",

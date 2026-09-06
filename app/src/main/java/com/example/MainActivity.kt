@@ -196,6 +196,7 @@ fun ObsidianApp(repository: ObsidianRepository) {
                             indicatorColor = ColorTealLight,
                             unselectedIconColor = TextMuted,
                             unselectedTextColor = TextMuted
+                        ),
                         modifier = Modifier.testTag("nav_profile")
                     )
                 }
@@ -281,7 +282,7 @@ fun ObsidianApp(repository: ObsidianRepository) {
                         ProfileScreen(
                             user = user,
                             onCreateEventClick = { isCreatingEvent = true },
-                            onEditProfileClick = { currentScreen = NavigationDest.EDIT_PROFILE },
+                            onEditProfileClick = { currentDest = NavigationDest.EDIT_PROFILE },
                             onLogoutClick = { isLoggedIn = false }
                         )
                     }
@@ -289,10 +290,10 @@ fun ObsidianApp(repository: ObsidianRepository) {
                     NavigationDest.EDIT_PROFILE -> {
                         com.example.ui.screens.EditProfileScreen(
                             user = user,
-                            onBack = { currentScreen = NavigationDest.PROFILE },
+                            onBack = { currentDest = NavigationDest.PROFILE },
                             onSave = { updatedProfile ->
                                 repository.updateUserProfile(updatedProfile)
-                                currentScreen = NavigationDest.PROFILE
+                                currentDest = NavigationDest.PROFILE
                             }
                         )
                     }

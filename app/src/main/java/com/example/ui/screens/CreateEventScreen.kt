@@ -386,16 +386,21 @@ fun CreateEventScreen(
                                                     verticalAlignment = Alignment.CenterVertically,
                                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                                 ) {
-                                                    val emoji = when (cat) {
-                                                        EventCategory.TECNOLOGIA -> "💻"
-                                                        EventCategory.MEETUP -> "🤝"
-                                                        EventCategory.SHOW -> "🎵"
-                                                        EventCategory.BAR -> "🍸"
-                                                        EventCategory.ESPACO -> "🏛️"
-                                                        EventCategory.PAREDAO -> "🔊"
-                                                        EventCategory.PRIVADO -> "🔒"
+                                                    val categoryIcon = when (cat) {
+                                                        EventCategory.TECNOLOGIA -> Icons.Default.Code
+                                                        EventCategory.MEETUP -> Icons.Default.Groups
+                                                        EventCategory.SHOW -> Icons.Default.MusicNote
+                                                        EventCategory.BAR -> Icons.Default.LocalBar
+                                                        EventCategory.ESPACO -> Icons.Default.AccountBalance
+                                                        EventCategory.PAREDAO -> Icons.Default.VolumeUp
+                                                        EventCategory.PRIVADO -> Icons.Default.Lock
                                                     }
-                                                    Text(text = emoji, fontSize = 16.sp)
+                                                    Icon(
+                                                        imageVector = categoryIcon,
+                                                        contentDescription = null,
+                                                        modifier = Modifier.size(16.dp),
+                                                        tint = if (isSelected) ColorTeal else TextSecondary
+                                                    )
                                                     Text(
                                                         text = cat.label,
                                                         fontSize = 12.5.sp,
@@ -502,12 +507,25 @@ fun CreateEventScreen(
                                 }
                             }
 
-                            Text(
-                                text = "🛡️ O sistema Obsidian impede check-in remoto e só ativa validação quando o participante estiver dentro deste raio físico.",
-                                fontSize = 11.5.sp,
-                                color = TextMuted,
-                                lineHeight = 15.sp
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Shield,
+                                    contentDescription = null,
+                                    tint = ColorTeal,
+                                    modifier = Modifier.size(15.dp).padding(top = 1.dp)
+                                )
+                                Text(
+                                    text = "O sistema Obsidian impede check-in remoto e só ativa validação quando o participante estiver dentro deste raio físico.",
+                                    fontSize = 11.5.sp,
+                                    color = TextMuted,
+                                    lineHeight = 15.sp,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
                         }
                     }
                 }

@@ -8,9 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,10 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.UserProfile
+import com.example.model.getAvatarVector
 import com.example.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,7 +37,18 @@ fun EditProfileScreen(
     var selectedEmoji by remember { mutableStateOf(user.avatarEmoji) }
     var selectedUri by remember { mutableStateOf(user.avatarUri) }
 
-    val emojiOptions = listOf("✨", "⚡", "🎸", "🎧", "👾", "🦊", "🐯", "😎", "🌟", "🔥")
+    val avatarOptions: List<Pair<String, ImageVector>> = listOf(
+        "auto_awesome" to Icons.Default.AutoAwesome,
+        "bolt" to Icons.Default.Bolt,
+        "music" to Icons.Default.MusicNote,
+        "headphones" to Icons.Default.Headphones,
+        "sports_esports" to Icons.Default.SportsEsports,
+        "pets" to Icons.Default.Pets,
+        "face" to Icons.Default.Face,
+        "star" to Icons.Default.Star,
+        "fire" to Icons.Default.LocalFireDepartment,
+        "rocket" to Icons.Default.RocketLaunch
+    )
 
     Box(
         modifier = Modifier
@@ -98,7 +109,12 @@ fun EditProfileScreen(
                         if (selectedUri != null) {
                             Icon(Icons.Default.Person, contentDescription = null, tint = Color.White, modifier = Modifier.size(70.dp))
                         } else {
-                            Text(text = selectedEmoji, fontSize = 60.sp)
+                            Icon(
+                                imageVector = getAvatarVector(selectedEmoji),
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(56.dp)
+                            )
                         }
                     }
                     Spacer(modifier = Modifier.height(20.dp))
@@ -111,25 +127,31 @@ fun EditProfileScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Emoji grid
+                        // Avatar icons grid
                         androidx.compose.foundation.lazy.LazyRow(
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            items(emojiOptions.size) { index ->
-                                val emoji = emojiOptions[index]
+                            items(avatarOptions.size) { index ->
+                                val (key, iconVector) = avatarOptions[index]
+                                val isSelected = selectedEmoji == key && selectedUri == null
                                 Surface(
                                     shape = CircleShape,
-                                    color = if (selectedEmoji == emoji && selectedUri == null) ColorTealLight else BgSurface,
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, if (selectedEmoji == emoji && selectedUri == null) ColorTeal else BorderWarm),
+                                    color = if (isSelected) ColorTealLight else BgSurface,
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, if (isSelected) ColorTeal else BorderWarm),
                                     modifier = Modifier
                                         .size(50.dp)
                                         .clickable {
-                                            selectedEmoji = emoji
+                                            selectedEmoji = key
                                             selectedUri = null
                                         }
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
-                                        Text(emoji, fontSize = 24.sp)
+                                        Icon(
+                                            imageVector = iconVector,
+                                            contentDescription = null,
+                                            tint = if (isSelected) ColorTeal else TextSecondary,
+                                            modifier = Modifier.size(24.dp)
+                                        )
                                     }
                                 }
                             }

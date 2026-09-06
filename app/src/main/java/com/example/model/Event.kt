@@ -41,7 +41,7 @@ data class SocialEvent(
     val isCheckedIn: Boolean = false,
     val checkInTimestamp: Long? = null,
     val tags: List<String> = listOf("Música", "Ambiente", "Segurança"),
-    val hostName: String = "Obsidian Tech Hub • 🛡️",
+    val hostName: String = "Obsidian Tech Hub",
     val hostId: String = "host_community",
     val isUserHost: Boolean = false,
     val mediaReel: List<String> = emptyList(),

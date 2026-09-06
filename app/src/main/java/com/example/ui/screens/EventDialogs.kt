@@ -54,16 +54,16 @@ fun EventFeedbackDialog(
 ) {
     var stars by remember { mutableIntStateOf(5) }
 
-    data class TribeTag(val name: String, val icon: String)
+    data class TribeTag(val name: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
     val availableTags = listOf(
-        TribeTag("Acústica & Som", "🎵"),
-        TribeTag("Sintonia da Tribo", "👥"),
-        TribeTag("Alquimia & Drinks", "🍸"),
-        TribeTag("Proteção & Respeito", "🛡️"),
-        TribeTag("Atmosfera & Luz", "✨"),
-        TribeTag("Espaço & Conforto", "🛋️"),
-        TribeTag("Acessibilidade", "📍"),
-        TribeTag("Alta Energia", "⚡")
+        TribeTag("Acústica & Som", Icons.Default.MusicNote),
+        TribeTag("Sintonia da Tribo", Icons.Default.Groups),
+        TribeTag("Alquimia & Drinks", Icons.Default.LocalBar),
+        TribeTag("Proteção & Respeito", Icons.Default.Shield),
+        TribeTag("Atmosfera & Luz", Icons.Default.AutoAwesome),
+        TribeTag("Espaço & Conforto", Icons.Default.Weekend),
+        TribeTag("Acessibilidade", Icons.Default.Place),
+        TribeTag("Alta Energia", Icons.Default.Bolt)
     )
     val selectedTags = remember { mutableStateListOf<String>("Sintonia da Tribo", "Acústica & Som") }
 
@@ -73,7 +73,7 @@ fun EventFeedbackDialog(
         2 -> Triple("Vibe Discreta", "Encontro calmo, com pouca sintonia no local.", Color(0xFF78909C))
         3 -> Triple("Boa Atmosfera", "Boa presença real e momentos agradáveis.", ColorTeal)
         4 -> Triple("Conexão Autêntica", "Sintonia vibrante e forte engajamento da tribo.", ColorBurntOrange)
-        else -> Triple("Ressonância Épica da Tribo 🔥", "Experiência memorável! Ponto alto no Radar de Quorum.", Color(0xFFD97706))
+        else -> Triple("Ressonância Épica da Tribo", "Experiência memorável! Ponto alto no Radar de Quorum.", Color(0xFFD97706))
     }
 
     Dialog(
@@ -175,11 +175,17 @@ fun EventFeedbackDialog(
                                                 .background(ColorTealLight, CircleShape)
                                         )
                                         Text(
-                                            text = "VOCÊ ESTEVE AQUI! ✨",
+                                            text = "VOCÊ ESTEVE AQUI!",
                                             fontSize = 9.5.sp,
                                             fontWeight = FontWeight.Black,
                                             color = ColorTealLight,
                                             letterSpacing = 0.8.sp
+                                        )
+                                        Icon(
+                                            imageVector = Icons.Default.AutoAwesome,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(11.dp),
+                                            tint = ColorTealLight
                                         )
                                     }
                                 }
@@ -207,11 +213,22 @@ fun EventFeedbackDialog(
                                 maxLines = 1
                             )
 
-                            Text(
-                                text = "Anfitrião: ${event.hostName}",
-                                fontSize = 11.5.sp,
-                                color = Color.White.copy(alpha = 0.75f)
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = "Anfitrião: ${event.hostName.substringBefore(" •")}",
+                                    fontSize = 11.5.sp,
+                                    color = Color.White.copy(alpha = 0.75f)
+                                )
+                                Icon(
+                                    imageVector = Icons.Default.Shield,
+                                    contentDescription = "Verificado",
+                                    tint = ColorTealLight,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                            }
                         }
                     }
 
@@ -315,6 +332,12 @@ fun EventFeedbackDialog(
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                                         ) {
+                                            Icon(
+                                                imageVector = if (stars == 5) Icons.Default.LocalFireDepartment else Icons.Default.AutoAwesome,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(13.dp),
+                                                tint = vibeColor
+                                            )
                                             Text(
                                                 text = vibeTitle,
                                                 fontSize = 12.sp,
@@ -335,7 +358,7 @@ fun EventFeedbackDialog(
                         }
 
                         // ====================================================================
-                        // 3. FREQUÊNCIA DA TRIBO (Pílulas de Sintonia com Emojis)
+                        // 3. FREQUÊNCIA DA TRIBO (Pílulas de Sintonia com Ícones)
                         // ====================================================================
                         Column(
                             modifier = Modifier.fillMaxWidth(),
@@ -390,7 +413,12 @@ fun EventFeedbackDialog(
                                                 verticalAlignment = Alignment.CenterVertically,
                                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                                             ) {
-                                                Text(text = tagItem.icon, fontSize = 13.sp)
+                                                Icon(
+                                                    imageVector = tagItem.icon,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(14.dp),
+                                                    tint = if (isSelected) ColorBurntOrangeHover else ColorTeal
+                                                )
                                                 Text(
                                                     text = tagItem.name,
                                                     fontSize = 11.sp,

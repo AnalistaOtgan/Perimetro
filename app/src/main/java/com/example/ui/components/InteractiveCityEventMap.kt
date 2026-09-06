@@ -318,17 +318,49 @@ fun EventMapPinMarker(
                             .background(ColorBurntOrange, CircleShape)
                     )
                 }
-                Text(
-                    text = if (isNearGeofence) "Perto!" else "★ ${event.ratingAvg}",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isNearGeofence) ColorBurntOrangeLight else Color.White
-                )
-                Text(
-                    text = "• 👥${event.attendeesCount}",
-                    fontSize = 10.sp,
-                    color = TextMuted
-                )
+                if (isNearGeofence) {
+                    Text(
+                        text = "Perto!",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = ColorBurntOrangeLight
+                    )
+                } else {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = null,
+                            tint = ColorMustard,
+                            modifier = Modifier.size(10.dp)
+                        )
+                        Text(
+                            text = "%.1f".format(event.ratingAvg),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+                Text(text = "•", fontSize = 10.sp, color = TextMuted)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Groups,
+                        contentDescription = null,
+                        tint = TextMuted,
+                        modifier = Modifier.size(10.dp)
+                    )
+                    Text(
+                        text = "${event.attendeesCount}",
+                        fontSize = 10.sp,
+                        color = TextMuted
+                    )
+                }
             }
         }
 

@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.UserProfile
 import com.example.model.UserTier
+import com.example.model.getAvatarVector
 import com.example.ui.components.HelpCenterDialog
 import com.example.ui.theme.*
 
@@ -109,8 +110,9 @@ fun ProfileScreen(
                     modifier = Modifier
                         .size(80.dp)
                         .clip(CircleShape)
-                        .background(
-                            if (user.avatarUri != null) Color.Transparent else Brush.linearGradient(listOf(ObsidianTeal, ObsidianBurntOrange))
+                        .then(
+                            if (user.avatarUri != null) Modifier.background(Color.Transparent)
+                            else Modifier.background(Brush.linearGradient(listOf(ObsidianTeal, ObsidianBurntOrange)))
                         ),
                     contentAlignment = Alignment.Center
                 ) {
@@ -126,7 +128,15 @@ fun ProfileScreen(
                                 .padding(16.dp)
                         )
                     } else {
-                        Text(text = user.avatarEmoji, fontSize = 40.sp)
+                        Icon(
+                            imageVector = getAvatarVector(user.avatarEmoji),
+                            contentDescription = "Avatar",
+                            tint = Color.White,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Brush.linearGradient(listOf(ObsidianTeal, ObsidianBurntOrange)))
+                                .padding(18.dp)
+                        )
                     }
                 }
 
@@ -545,7 +555,7 @@ fun LevelDetailsDialog(
                 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    crossAxisAlignment = Alignment.Top
+                    verticalAlignment = Alignment.Top
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(40.dp)) {
                         Box(
